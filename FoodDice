@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import random
+from datetime import date, datetime
+
+year = 2017
+
+seasons = [('spring', (date(year, 3, 20), date(year, 6, 20))),
+          ('summer', (date(year, 6, 21), date(year, 9, 22))),
+          ('fall', (date(year, 9, 23), date(year, 12, 21))),
+          ('winter', (date(year, 12, 22), date(year, 3, 31)))]
+
+
+#spring = [('spring', (date(year, 3, 20), date(year, 6, 20)))]
+#summer = [('summer', (date(year, 6, 21), date(year, 9, 22)))]
+#fall =   [('fall', (date(year, 9, 23), date(year, 12, 21)))]
+#winter = [('winter', (date(year, 12, 22), date(year, 3, 31)))]
+
+def season(now):
+    if isinstance(now, datetime):
+        now = now.date()
+    now = now.replace(year=year)
+    return next(season for season, (start, end) in seasons
+                if start <= now <= end)
+                
+
+cookingMethods = ['gril', 'roast/bake', 'broil', 'saute', 'pan fry', 'braise']
+protein = ['beef or tempeh', 'chicken or tofu', 'turkey or seitan', 'fish or cheese', 'pork or eggs', 'lamb or beans']
+grainsCarbs = ['rice', 'quinoa', 'pasta', 'polenta', 'potato', 'millet']
+herbs = ['rosemary', 'basil', 'oregano', 'cilantro', 'thyme', 'dill']
+bonusIngredients = ['mushrooms', 'bacon', 'nuts', 'onions', 'lemon', 'garlic']
+
+springVeggies = ['dandelion greens', 'peas', 'asparagus', 'artichokes', 'spinach', 'radishas']
+summerVeggies = ['bell peppers', 'zucchini', 'eggplant', 'tomatoes', 'corn', 'green beans']
+fallVeggies = ['mustard greens', 'brussels sprouts', 'squash', 'chard', 'broccoli', 'arugula']
+winterVeggies = ['carrots', 'parsnips', 'cabbage', 'fennel', 'endives', 'kale'] 
+
+random.shuffle(cookingMethods)
+random.shuffle(protein)
+random.shuffle(grainsCarbs)
+random.shuffle(herbs)
+random.shuffle(bonusIngredients)
+random.shuffle(springVeggies)
+random.shuffle(summerVeggies)
+random.shuffle(fallVeggies)
+random.shuffle(winterVeggies)
+
+
+print('Cooking Method - '+ cookingMethods[0])
+print('Type of Protein - ' + protein[0])
+print('Type of Grains or Carbs - ' + grainsCarbs[0])
+print('Type of herb - ' + herbs[0])
+print('Bonus Ingredient - ' + bonusIngredients[0])
+#print('Seasonal Veggie - ' + springVeggies[0])
+
+
