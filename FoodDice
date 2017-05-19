@@ -47,11 +47,11 @@ print('Type of Grains or Carbs - ' + grainsCarbs[0])
 print('Type of herb - ' + herbs[0])
 print('Bonus Ingredient - ' + bonusIngredients[0])
 
-if (season(date.today())) == "spring":
+if (season(date.today())) == 'spring':
     print('Seasonal Veggie - ' + springVeggies[0])
-elif (season(date.today())) == "summer":
+elif (season(date.today())) == 'summer':
     print('Seasonal Veggie - ' + summerVeggies[0])
-elif (season(date.today())) == "fall":
+elif (season(date.today())) == 'fall':
     print('Seasonal Veggie - ' + fallVeggies[0])
 else:
   print('Seasonal Veggie - ' + winterVeggies[0])
