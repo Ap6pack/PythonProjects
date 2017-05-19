@@ -10,19 +10,14 @@ seasons = [('spring', (date(year, 3, 20), date(year, 6, 20))),
           ('fall', (date(year, 9, 23), date(year, 12, 21))),
           ('winter', (date(year, 12, 22), date(year, 3, 31)))]
 
-
-#spring = [('spring', (date(year, 3, 20), date(year, 6, 20)))]
-#summer = [('summer', (date(year, 6, 21), date(year, 9, 22)))]
-#fall =   [('fall', (date(year, 9, 23), date(year, 12, 21)))]
-#winter = [('winter', (date(year, 12, 22), date(year, 3, 31)))]
-
 def season(now):
     if isinstance(now, datetime):
         now = now.date()
     now = now.replace(year=year)
-    return next(season for season, (start, end) in seasons
+    return next(seasons for seasons, (start, end) in seasons
                 if start <= now <= end)
                 
+
 
 cookingMethods = ['gril', 'roast/bake', 'broil', 'saute', 'pan fry', 'braise']
 protein = ['beef or tempeh', 'chicken or tofu', 'turkey or seitan', 'fish or cheese', 'pork or eggs', 'lamb or beans']
@@ -51,6 +46,12 @@ print('Type of Protein - ' + protein[0])
 print('Type of Grains or Carbs - ' + grainsCarbs[0])
 print('Type of herb - ' + herbs[0])
 print('Bonus Ingredient - ' + bonusIngredients[0])
-#print('Seasonal Veggie - ' + springVeggies[0])
 
-
+if (season(date.today())) == "spring":
+    print('Seasonal Veggie - ' + springVeggies[0])
+elif (season(date.today())) == "summer":
+    print('Seasonal Veggie - ' + summerVeggies[0])
+elif (season(date.today())) == "fall":
+    print('Seasonal Veggie - ' + fallVeggies[0])
+else:
+  print('Seasonal Veggie - ' + winterVeggies[0])
