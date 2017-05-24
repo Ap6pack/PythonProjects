@@ -1,0 +1,67 @@
+### What and where the information is being stored
+
+userTuples = ["Name", "Age", "Sex"]
+userList = [ ]
+age2 = []
+sex2 = []
+
+### I have used def to define my menu so I can use this format over and over.  
+
+def userDirectory():  
+                print "1. Add your information to the list"
+                print "2. Find out the number of males and the number of females and the average age of each in the list"
+                print "3. Print the list"
+                print "4. Quit"
+                print
+                
+
+### calling the Directory and setting the number of options
+ 
+userDirectory()
+userDirectory = 0
+while userDirectory != 4:   
+
+### Printing user prompt and requesting users information
+    
+    userDirectory = input("Pick a number from the menu: ")
+    print
+    if userDirectory == 1:
+        name = raw_input("What is your name? ")
+        userList.append(name) 
+        userTuples = tuple(userList)
+        age2 = raw_input("How old are you " + name + "? ")
+        userList.append(age)
+        age.append(age)
+        userTuples = tuple(userList)
+        sex2 = raw_input("What sex do you identify with Male or Female " + name + "? ")
+        userList.append(sex)
+        sex.append(sex)
+        userTuples = tuple(userList)
+        print
+        print "Your name is " + name + ", you are " + age + " years old" + "and you identfy as a " + sex
+        print
+        
+### Seconed user option asking if they would like to find out the number of males and the number of females and the average age of each in the list.
+        
+    elif userDirectory == 2:
+        
+        print "Number if Males in the list ", sex.count("male") + sex.count("Male") + sex.count("m") + sex.count("M")
+
+        print "Number of Females in the list ", sex.count("female") + sex.count("Female") + sex.count("f") + sex.count("F")
+
+        print "The average age of the Males ",'\n' ### still trying to solve this question 
+        
+        print "The average age of the Females ", ### still trying to solve this question
+        print
+        print
+### Third user option where they can print the information that has been inputed.
+        
+    elif userDirectory == 3:
+        print userTuples
+        print 
+ 
+### Fourth options is where the user can end the loop.
+        
+    elif userDirectory == 4:
+                                print "Thank you, Have a nice day"
+                                break
