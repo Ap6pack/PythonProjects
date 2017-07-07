@@ -40,12 +40,11 @@ random.shuffle(summerVeggies)
 random.shuffle(fallVeggies)
 random.shuffle(winterVeggies)
 
-
-print('Cooking Method - '+ cookingMethods[0])
-print('Type of Protein - ' + protein[0])
-print('Type of Grains or Carbs - ' + grainsCarbs[0])
-print('Type of herb - ' + herbs[0])
-print('Bonus Ingredient - ' + bonusIngredients[0])
+print('Cooking Method - '+ cookingMethods[0], '\n' 
+'Type of Protein - ' + protein[0], '\n'
+'Type of Grains or Carbs - ' + grainsCarbs[0], '\n'
+'Type of herb - ' + herbs[0], '\n'
+'Bonus Ingredient - ' + bonusIngredients[0])
 
 if (season(date.today())) == 'spring':
     print('Seasonal Veggie - ' + springVeggies[0])
