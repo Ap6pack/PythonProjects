@@ -1,10 +1,10 @@
 import shodan
 import requests
 
+target = str(input("Enter URL or IP Address of your target website: "))
+
 SHODAN_API_KEY = "INSERT YOUR OWN KEY"
 api = shodan.Shodan(SHODAN_API_KEY)
-
-target = "" # define your target site
 
 dns_resolve = 'https://api.shodan.io/dns/resolve?hostnames=' + \
     target + '&key=' + SHODAN_API_KEY
