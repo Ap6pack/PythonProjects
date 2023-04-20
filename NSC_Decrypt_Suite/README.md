@@ -8,7 +8,7 @@ This script requires the openpyxl module to be installed. You can install it via
 To use this script, follow these steps:
 
 1. Place the example.xlsx file in the same directory as the excel2text.py script.
-2. Run the `code` excel2text.py script.
+2. Run the `excel2text.py` script.
 3. Check the same directory for the output.txt file containing the extracted text.
 
 # NSCCookieParserTxt.py
@@ -17,7 +17,7 @@ This Python 3 script, nsccookieparsertxt.py, is designed to parse a text file an
 
 ## Usage
 
-To use this script, save the file as nsccookieparsertxt.py and place it in the same directory as the text file that you want to parse. Then, in a terminal or command prompt, navigate to the directory and run the following command: `code` python nsccookieparsertxt.py
+To use this script, save the file as nsccookieparsertxt.py and place it in the same directory as the text file that you want to parse. Then, in a terminal or command prompt, navigate to the directory and run the following command: `python nsccookieparsertxt.py`
 
 The script will prompt you to enter the name of the text file that you want to parse. Enter the name of the file (including the file extension) and press Enter. The script will then search the file for NetScaler cookies and extract them into a list. The list is then written to a file named input.txt in the same directory.
 
@@ -38,7 +38,7 @@ This script requires the following dependencies:
 
 1. Create a file named `input.txt` in the same directory as the script.
 2. Add one or more Citrix NetScaler cookies per line to the `input.txt` file.
-3. Run the script using the following command: `code` python nsccookiedercyptBulk.py
+3. Run the script using the following command: `python nsccookiedercyptBulk.py`
 4. The decrypted output will be written to a file named `output.txt` in the same directory as the script.
 
 The output for each input cookie will be written to `output.txt` in the following format:
