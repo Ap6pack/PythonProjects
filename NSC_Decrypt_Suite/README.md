@@ -42,10 +42,10 @@ This script requires the following dependencies:
 4. The decrypted output will be written to a file named `output.txt` in the same directory as the script.
 
 The output for each input cookie will be written to `output.txt` in the following format:
-NSC: [input cookie]
-vServer Name=[decrypted service name]
-vServer IP=[decrypted server IP]
-vServer Port=[decrypted server port]
+- NSC: [input cookie]
+- vServer Name=[decrypted service name]
+- vServer IP=[decrypted server IP]
+- vServer Port=[decrypted server port]
 
 ## How it Works
 
