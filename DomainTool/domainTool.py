@@ -5,6 +5,8 @@ import whois
 import dns.resolver
 import ssl
 import requests
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 
 class DataProcessor:
@@ -33,7 +35,7 @@ class DataProcessor:
 
     def load_data_from_terminal(self):
         # Code to read data from user input in the terminal
-        print("Enter data (one entry per line, press 'enter then c' to continue):")
+        print("Enter data (one entry per line, press 'enter then c' to continue'):")
         self.data = []
         while True:
             entry = input()
@@ -168,29 +170,34 @@ class DataProcessor:
 
 def main():
     dp = DataProcessor()
+    should_exit = False
 
-    while True:
+    while not should_exit:
         print("1. Select how to input data:")
         print("   a. Excel")
         print("   b. XML")
         print("   c. Text")
         print("   d. Terminal")
-        print("   e. Exit")
+        print("   e. Continue")
         input_option = input("Choose an option: ")
 
         if input_option == 'a':
-            file_path = input("Enter the path to the Excel file: ")
+            Tk().withdraw()  # Hide the root window
+            file_path = askopenfilename(title="Select Excel file")  # Show file selection dialog
             dp.load_data_from_excel(file_path)
         elif input_option == 'b':
-            file_path = input("Enter the path to the XML file: ")
+            Tk().withdraw()
+            file_path = askopenfilename(title="Select XML file")
             dp.load_data_from_xml(file_path)
         elif input_option == 'c':
-            file_path = input("Enter the path to the text file: ")
+            Tk().withdraw()
+            file_path = askopenfilename(title="Select text file")
             dp.load_data_from_text(file_path)
         elif input_option == 'd':
             dp.load_data_from_terminal()
         elif input_option == 'e':
-            break
+            should_exit = True
+            continue
 
         print("\n2. Select functions to perform:")
         print("   a. Whois lookup")
@@ -203,33 +210,29 @@ def main():
         print("   h. Back to Menu")
         function_options = input("Choose functions (comma-separated): ").split(',')
 
-        if 'h' in function_options:
-            continue
+    dp.perform_functions(function_options)
+    print("\n3. Select how to output the results:")
+    print("   a. Excel")
+    print("   b. Text")
+    print("   c. XML")
+    print("   d. Terminal")
+    print("   e. Back to Menu")
+    output_option = input("Choose an option: ")
 
-        dp.perform_functions(function_options)
-
-        print("\n3. Select how to output the results:")
-        print("   a. Excel")
-        print("   b. Text")
-        print("   c. XML")
-        print("   d. Terminal")
-        print("   e. Back to Menu")
-        output_option = input("Choose an option: ")
-
-        if output_option == 'a':
-            file_path = input("Enter the path to save the Excel file: ")
-            dp.save_output_as_excel(file_path)
-        elif output_option == 'b':
-            file_path = input("Enter the path to save the text file: ")
-            dp.save_output_as_text(file_path)
-        elif output_option == 'c':
-            file_path = input("Enter the path to save the XML file: ")
-            dp.save_output_as_xml(file_path)
-        elif output_option == 'd':
-            dp.save_output_to_terminal()
-        elif output_option == 'e':
-            continue
-
+    if output_option == 'a':
+        Tk().withdraw()
+        file_path = asksaveasfilename(title="Save Excel file")
+        dp.save_output_as_excel(file_path)
+    elif output_option == 'b':
+        Tk().withdraw()
+        file_path = asksaveasfilename(title="Save text file")
+        dp.save_output_as_text(file_path)
+    elif output_option == 'c':
+        Tk().withdraw()
+        file_path = asksaveasfilename(title="Save XML file")
+        dp.save_output_as_xml(file_path)
+    elif output_option == 'e':
+        should_exit = True
 
 if __name__ == '__main__':
     main()
