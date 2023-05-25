@@ -58,6 +58,8 @@ class DataProcessor:
             entry = input()
 
     def perform_functions(self, function_options):
+        self.results = []  # Clear the results list
+        function_options = function_options.strip()
         for option in function_options:
             option = option.strip()
             if option == "a":
@@ -141,10 +143,15 @@ class DataProcessor:
 
                 response = requests.head(url)
                 headers = response.headers
-                result = f"URL: {url}\nHeaders: {headers}"
+                result = f"URL: {url}\nHeaders:"
+                
+                for header, value in headers.items():
+                    result += f"\n\t{header}: {value}"
+
+                self.results.append(result)
             except Exception as e:
                 result = f"HTTP headers lookup failed for URL {url}: {str(e)}"
-            self.results.append(result)
+                self.results.append(result)
 
     def perform_subdomain_lookup(self):
         for domain in self.data:
@@ -205,7 +212,7 @@ class DataProcessor:
         print("Output:")
         for item in self.results:
             print(item)
-
+            
 def main():
     dp = DataProcessor()
     should_exit = False
@@ -277,6 +284,7 @@ def main():
                 dp.save_output_as_xml()
             if "l" in function_options:
                 dp.print_output_to_terminal()
+
 
 if __name__ == "__main__":
     main()
