@@ -18,6 +18,7 @@ class DataProcessor:
     def __init__(self):
         self.data = None
         self.results = []
+        self.file_type = None
 
     def load_data_from_excel(self, file_path):
         if not file_path:
@@ -75,9 +76,19 @@ class DataProcessor:
             elif option == "f":
                 self.perform_http_headers_lookup()
             elif option == "g":
-                self.perform_subdomain_lookup()
+                show_menu(self)  # Call the show_menu() function
             elif option == "h":
-                self._show_menu()
+                self.save_output_as_excel()
+            elif option == "i":
+                self.save_output_as_text()
+            elif option == "j":
+                self.save_output_as_xml()
+            elif option == "k":
+                self.print_output_to_terminal()
+            elif option == "l":
+                return  # Exit the function
+            else:
+                print(f"Invalid option: {option}")
 
     def perform_whois_lookup(self):
         for domain in self.data:
@@ -124,12 +135,16 @@ class DataProcessor:
         for domain in self.data:
             try:
                 cert = ssl.get_server_certificate((domain, 443))
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+                x509 = OpenSSL.crypto.load_certificate(
+                    OpenSSL.crypto.FILETYPE_PEM, cert
+                )
                 expiration_date = x509.get_notAfter().decode()
                 result = f"Domain: {domain}\nExpiration Date: {expiration_date}"
 
                 cmd = f"sslscan {domain}"
-                sslscan_output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+                sslscan_output = subprocess.check_output(
+                    cmd, shell=True, universal_newlines=True
+                )
                 result += f"\n\nSSL Scan:\n{sslscan_output}"
             except Exception as e:
                 result = f"SSL certificate lookup failed for domain {domain}: {str(e)}"
@@ -153,16 +168,6 @@ class DataProcessor:
                 result = f"HTTP headers lookup failed for URL {url}: {str(e)}"
                 self.results.append(result)
 
-    def perform_subdomain_lookup(self):
-        for domain in self.data:
-            try:
-                output = subprocess.check_output(["dig", f"{domain}", "+short", "+sub"])
-                subdomains = output.decode().strip().splitlines()
-                result = f"Domain: {domain}\nSubdomains: {', '.join(subdomains)}"
-            except Exception as e:
-                result = f"Subdomain lookup failed for domain {domain}: {str(e)}"
-            self.results.append(result)
-
     def save_output_as_excel(self):
         try:
             wb = openpyxl.Workbook()
@@ -170,12 +175,12 @@ class DataProcessor:
 
             for i, result in enumerate(self.results, start=1):
                 # Replace illegal characters with a placeholder
-                result = result.replace('\r', '').replace('\n', ' ')
+                result = result.replace("\r", "").replace("\n", " ")
                 try:
                     sheet.cell(row=i, column=1, value=result)
                 except openpyxl.utils.exceptions.IllegalCharacterError:
                     # Handle the error by replacing illegal characters with an empty string
-                    sanitized_result = ''.join(c for c in result if c.isprintable())
+                    sanitized_result = "".join(c for c in result if c.isprintable())
                     sheet.cell(row=i, column=1, value=sanitized_result)
 
             file_path = self._get_save_file_path("xlsx")
@@ -209,24 +214,22 @@ class DataProcessor:
             raise ValueError("Failed to save output as XML file. Error: " + str(e))
 
     def _get_save_file_path(self, file_type):
-        root = Tk()
+        root = tk.Tk()
         root.withdraw()
         file_path = filedialog.asksaveasfilename(
             defaultextension=f".{file_type.lower()}",
             filetypes=[(f"{file_type} files", f"*.{file_type.lower()}")],
         )
         return file_path
-    
+
     def print_output_to_terminal(self):
         print("Output:")
         for item in self.results:
             print(item)
-            
-def main():
-    dp = DataProcessor()
-    should_exit = False
 
-    while not should_exit:
+
+def show_menu(dp):
+    while True:
         print("\nSelect data source:")
         print("1. Excel file")
         print("2. XML file")
@@ -258,43 +261,38 @@ def main():
         elif source_option == "4":
             dp.load_data_from_terminal()
         elif source_option == "5":
-            should_exit = True
+            break
         else:
             print("Invalid option. Please choose a valid option.")
             continue
 
-        if not should_exit:
-            print("\nSelect functions to perform:")
-            print("a. WHOIS lookup")
-            print("b. NSLookup")
-            print("c. DNS lookup")
-            print("d. Reverse DNS lookup")
-            print("e. SSL certificate lookup")
-            print("f. HTTP headers lookup")
-            print("g. Subdomain lookup")
-            print("h. Show menu")
-            print("i. Save output as Excel file")
-            print("j. Save output as Text file")
-            print("k. Save output as XML file")
-            print("l. Print output to terminal")
-            print("m. Exit")
+        print("\nSelect functions to perform:")
+        print("a. WHOIS lookup")
+        print("b. NSLookup")
+        print("c. DNS lookup")
+        print("d. Reverse DNS lookup")
+        print("e. SSL certificate lookup")
+        print("f. HTTP headers lookup")
+        print("g. Show menu")
+        print("h. Save output as Excel file")
+        print("i. Save output as Text file")
+        print("j. Save output as XML file")
+        print("k. Print output to terminal")
+        print("l. Exit")
+        function_options = input("Enter function options (e.g., 'abce'): ")
+        dp.perform_functions(function_options)
 
-            function_options = input("Enter options (e.g., 'abce'): ")
+        if "g" in function_options:
+            show_menu(dp)  # Call the show_menu() function recursively
 
-            if "h" in function_options:
-                dp._show_menu()
-            elif "i" in function_options:
-                dp.save_output_as_excel()
-            elif "j" in function_options:
-                dp.save_output_as_text()
-            elif "k" in function_options:
-                dp.save_output_as_xml()
-            elif "l" in function_options:
-                dp.print_output_to_terminal()
-            elif "m" in function_options:
-                should_exit = True
-            else:
-                dp.perform_functions(function_options)
+        if "l" in function_options:
+            sys.exit()
+
+
+def main():
+    dp = DataProcessor()
+    show_menu(dp)
+
 
 if __name__ == "__main__":
     main()
