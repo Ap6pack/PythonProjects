@@ -278,22 +278,23 @@ def main():
             print("k. Save output as XML file")
             print("l. Print output to terminal")
             print("m. Exit")
-            function_options = input("Enter options (e.g., 'ab' for WHOIS lookup and NSLookup): ")
+
+            function_options = input("Enter options (e.g., 'abce'): ")
 
             if "h" in function_options:
                 dp._show_menu()
+            elif "i" in function_options:
+                dp.save_output_as_excel()
+            elif "j" in function_options:
+                dp.save_output_as_text()
+            elif "k" in function_options:
+                dp.save_output_as_xml()
+            elif "l" in function_options:
+                dp.print_output_to_terminal()
+            elif "m" in function_options:
+                should_exit = True
             else:
                 dp.perform_functions(function_options)
-
-            if "i" in function_options:
-                dp.save_output_as_excel()
-            if "j" in function_options:
-                dp.save_output_as_text()
-            if "k" in function_options:
-                dp.save_output_as_xml()
-            if "l" in function_options:
-                dp.print_output_to_terminal()
-
 
 if __name__ == "__main__":
     main()
