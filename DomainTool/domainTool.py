@@ -167,15 +167,24 @@ class DataProcessor:
         try:
             wb = openpyxl.Workbook()
             sheet = wb.active
+
             for i, result in enumerate(self.results, start=1):
-                sheet.cell(row=i, column=1, value=result)
+                # Replace illegal characters with a placeholder
+                result = result.replace('\r', '').replace('\n', ' ')
+                try:
+                    sheet.cell(row=i, column=1, value=result)
+                except openpyxl.utils.exceptions.IllegalCharacterError:
+                    # Handle the error by replacing illegal characters with an empty string
+                    sanitized_result = ''.join(c for c in result if c.isprintable())
+                    sheet.cell(row=i, column=1, value=sanitized_result)
+
             file_path = self._get_save_file_path("xlsx")
             wb.save(file_path)
             wb.close()
             print(f"Output saved as Excel file: {file_path}")
         except Exception as e:
             raise ValueError("Failed to save output as Excel file. Error: " + str(e))
-
+    
     def save_output_as_text(self):
         try:
             file_path = self._get_save_file_path("txt")
