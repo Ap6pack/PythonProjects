@@ -1,8 +1,8 @@
 import sys
 import tkinter as tk
 from tkinter import Tk, filedialog
-import network_operations
 import file_operations
+from data_processor import DataProcessor
 
 def main_menu(dp):
     while True:
@@ -90,17 +90,29 @@ def function_menu(dp):
 
         for opt in options:
             if opt == "1":
-                network_operations.perform_whois_lookup(dp)
+                print("Performing WHOIS lookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_whois_lookup()
             elif opt == "2":
-                network_operations.perform_nslookup(dp)
+                print("Performing NSLookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_nslookup()
             elif opt == "3":
-                network_operations.perform_dns_lookup(dp)
+                print("Performing DNS lookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_dns_lookup()
             elif opt == "4":
-                network_operations.perform_reverse_dns_lookup(dp)
+                print("Performing reverse DNS lookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_reverse_dns_lookup()
             elif opt == "5":
-                network_operations.perform_ssl_cert_lookup(dp)
+                print("Performing SSL certificate lookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_ssl_cert_lookup()
             elif opt == "6":
-                network_operations.perform_http_headers_lookup(dp)
+                print("Performing HTTP headers lookup...")
+                # Call the respective method in DataProcessor class
+                dp.perform_http_headers_lookup()
             else:
                 print(f"Invalid option '{opt}'. Please choose a valid option.")
 
@@ -134,3 +146,9 @@ def save_menu(dp):
         else:
             print("Invalid option. Please choose a valid option.")
             continue
+
+# Create an instance of DataProcessor
+dp = DataProcessor()
+
+# Start the main menu
+main_menu(dp)
