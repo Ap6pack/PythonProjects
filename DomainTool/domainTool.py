@@ -36,10 +36,15 @@ class DataProcessor:
             raise ValueError(f"Failed to load data from Excel file. Error: {str(e)}")
    
     def load_data_from_xml(self, file_path):
+        if not file_path:
+            print("No file selected. Exiting...")
+            return False
         try:
             tree = ET.parse(file_path)
             root = tree.getroot()
-            self.data = [elem.text for elem in root.findall(".//data")]
+            self.data = [elem.text for elem in root.findall(".//domain")]
+            print(f"Data loaded from XML file: {file_path}")
+            return True
         except Exception as e:
             raise ValueError("Failed to load data from XML file. Error: " + str(e))
 
@@ -80,9 +85,9 @@ class DataProcessor:
             elif option == "h":
                 self.save_output_as_excel()
             elif option == "i":
-                self.save_output_as_text()
-            elif option == "j":
                 self.save_output_as_xml()
+            elif option == "j":
+                self.save_output_as_text()
             elif option == "k":
                 self.print_output_to_terminal()
             elif option == "l":
@@ -190,6 +195,30 @@ class DataProcessor:
         except Exception as e:
             raise ValueError("Failed to save output as Excel file. Error: " + str(e))
     
+    def save_output_as_xml(self):
+        try:
+            root = ET.Element("root")
+            for result in self.results:
+                result_elem = ET.SubElement(root, "result")
+
+                domain_elem = ET.SubElement(result_elem, "domain")
+                domain_text = f"Domain: {result['Domain']}\n"
+                domain_text += f"Registrar: {result['Registrar']}\n"
+                domain_text += f"Name Servers: {', '.join(result['NameServers'])}"
+                domain_elem.text = domain_text.strip()
+
+                registrar_elem = ET.SubElement(result_elem, "registrar")
+                registrar_elem.text = ""
+
+                name_servers_elem = ET.SubElement(result_elem, "name_servers")
+
+            tree = ET.ElementTree(root)
+            file_path = self._get_save_file_path("xml")
+            tree.write(file_path, encoding="UTF-8", xml_declaration=True)
+            print(f"Output saved as XML file: {file_path}")
+        except Exception as e:
+            raise ValueError("Failed to save output as XML file. Error: " + str(e))
+
     def save_output_as_text(self):
         try:
             file_path = self._get_save_file_path("txt")
@@ -200,18 +229,7 @@ class DataProcessor:
         except Exception as e:
             raise ValueError("Failed to save output as Text file. Error: " + str(e))
 
-    def save_output_as_xml(self):
-        try:
-            root = ET.Element("results")
-            for result in self.results:
-                elem = ET.SubElement(root, "result")
-                elem.text = result
-            tree = ET.ElementTree(root)
-            file_path = self._get_save_file_path("xml")
-            tree.write(file_path)
-            print(f"Output saved as XML file: {file_path}")
-        except Exception as e:
-            raise ValueError("Failed to save output as XML file. Error: " + str(e))
+
 
     def _get_save_file_path(self, file_type):
         root = tk.Tk()
@@ -252,8 +270,16 @@ def show_menu(dp):
                 continue
         elif source_option == "2":
             Tk().withdraw()
-            file_path = askopenfilename(title="Select XML file")
-            dp.load_data_from_xml(file_path)
+            file_path = askopenfilename(
+                title="Select XML file",
+                filetypes=[("XML files", "*.xml"), ("All Files", "*.*")],
+                )
+            if file_path:
+                if dp.load_data_from_xml(file_path):
+                    dp.file_type ="XML"
+            else:
+                print("No file selected.")
+                continue
         elif source_option == "3":
             Tk().withdraw()
             file_path = askopenfilename(title="Select text file")
@@ -275,8 +301,8 @@ def show_menu(dp):
         print("f. HTTP headers lookup")
         print("g. Show menu")
         print("h. Save output as Excel file")
-        print("i. Save output as Text file")
-        print("j. Save output as XML file")
+        print("i. Save output as XML file")
+        print("j. Save output as Text file")
         print("k. Print output to terminal")
         print("l. Exit")
         function_options = input("Enter function options (e.g., 'abce'): ")
