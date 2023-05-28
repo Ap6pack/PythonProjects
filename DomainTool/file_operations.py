@@ -37,11 +37,12 @@ def load_data_from_text(file_path):
             data = file.read().splitlines()
         return data
     except Exception as e:
-        raise ValueError("Failed to load data from Text file. Error: " + str(e))
+        print(f"Failed to load data from Text file. Error: {str(e)}")
+        return
 
 def load_data_from_terminal(data_processor):
     print("Enter data (one entry per line, press 'enter' twice to continue):")
-    data_processor.data = []
+    data_processor.clear_data()  # Clear the data before loading new data
     entry = input()
     while entry:
         data_processor.data.append(entry)
@@ -63,12 +64,15 @@ def save_output_as_excel(data_processor):
                 sanitized_result = "".join(c for c in result if c.isprintable())
                 sheet.cell(row=i, column=1, value=sanitized_result)
 
-        file_path = get_save_file_path("xlsx")
+        file_path = get_file_path("xlsx", "save")
+        if not file_path:
+            print("File selection canceled. Returning to Main Menu.")
+            return
         wb.save(file_path)
         wb.close()
         print(f"Output saved as Excel file: {file_path}")
     except Exception as e:
-        raise ValueError("Failed to save output as Excel file. Error: " + str(e))
+        print("Failed to save output as Excel file. Error: " + str(e))
 
 def save_output_as_xml(results):
     try:
@@ -88,29 +92,50 @@ def save_output_as_xml(results):
             name_servers_elem = ET.SubElement(result_elem, "name_servers")
 
         tree = ET.ElementTree(root)
-        file_path = get_save_file_path("xml")
+        file_path = get_file_path("xml", "save")
+        if not file_path:
+            print("File selection canceled. Returning to Main Menu.")
+            return
         tree.write(file_path, encoding="UTF-8", xml_declaration=True)
         print(f"Output saved as XML file: {file_path}")
     except Exception as e:
-        raise ValueError("Failed to save output as XML file. Error: " + str(e))
+        print(f"Failed to save output as XML file. Error: {str(e)}")
+
 
 def save_output_as_text(results):
     try:
-        file_path = get_save_file_path("txt")
+        file_path = get_file_path("txt", "save")
+        if not file_path:
+            print("File selection canceled. Returning to Main Menu.")
+            return
         with open(file_path, "w") as file:
             for result in results:
                 file.write(result + "\n\n")
         print(f"Output saved as Text file: {file_path}")
     except Exception as e:
-        raise ValueError("Failed to save output as Text file. Error: " + str(e))
+        print(f"Failed to save output as Text file. Error: {str(e)}")
 
-def get_save_file_path(file_type):
+
+def get_file_path(file_type, action):
     root = tk.Tk()
     root.withdraw()
-    file_path = filedialog.asksaveasfilename(
-        defaultextension=f".{file_type.lower()}",
-        filetypes=[(f"{file_type} files", f"*.{file_type.lower()}")],
-    )
+
+    if action == "load":
+        file_path = filedialog.askopenfilename(filetypes=[(f"{file_type} files", f"*.{file_type.lower()}")])
+        if not file_path:
+            print("File selection canceled. Returning to Main Menu.")
+            return None
+    elif action == "save":
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=f".{file_type.lower()}",
+            filetypes=[(f"{file_type} files", f"*.{file_type.lower()}")]
+        )
+        if not file_path:
+            print("No file selected. Returning to Main Menu.")
+            return None
+    else:
+        print("Invalid action. Supported actions are 'load' and 'save'.")
+
     return file_path
 
 def print_output_to_terminal(data_processor):

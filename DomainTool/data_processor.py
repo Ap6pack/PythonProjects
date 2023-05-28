@@ -10,7 +10,6 @@ class DataProcessor:
     def load_data_from_excel(self, file_path):
         self.data = file_operations.load_data_from_excel(file_path)
 
-
     def load_data_from_xml(self, file_path):
         self.data = file_operations.load_data_from_xml(file_path)
 
@@ -20,14 +19,14 @@ class DataProcessor:
     def load_data_from_terminal(self):
         self.data = file_operations.load_data_from_terminal()
 
-    def print_output_to_excel(self):
-        self.data = file_operations.print_output_to_excel(self.results)
+    def save_output_to_excel(self, file_path):
+        file_operations.save_output_as_excel(file_path, self.results)
 
-    def print_output_to_xml(self):
-        self.data = file_operations.print_output_to_xml(self.results)
+    def save_output_to_xml(self, file_path):
+        file_operations.save_output_as_xml(file_path, self.results)
 
-    def print_output_to_terminal(self):
-        self.data = file_operations.print_output_to_text(self.results)
+    def save_output_to_terminal(self, file_path):
+        file_operations.save_output_as_text(file_path, self.results)
 
     def perform_whois_lookup(self):
         self.results = network_operations.perform_whois_lookup(self.data)
@@ -46,3 +45,6 @@ class DataProcessor:
 
     def perform_http_headers_lookup(self):
         self.results = network_operations.perform_http_headers_lookup(self.data)
+    
+    def clear_data(self):
+        self.data = []  # Clear the data by assigning an empty list
