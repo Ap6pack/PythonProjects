@@ -52,7 +52,11 @@ def main_menu(dp):
                     print("No file selected.")
                     continue
         elif option == "4":
-            file_operations.load_data_from_terminal(dp)
+            if file_operations.load_data_from_terminal(dp):
+                function_menu(dp)  # Call the function menu
+                break  # Break out of the loop and exit the main menu
+            else:
+                continue  # Go back to the main menu
         elif option == "5":
             sys.exit()
         else:

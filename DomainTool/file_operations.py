@@ -48,9 +48,17 @@ def load_data_from_terminal(data_processor):
     print("Enter data (one entry per line, press 'enter' twice to continue):")
     data_processor.clear_data()  # Clear the data before loading new data
     entry = input()
-    while entry:
-        data_processor.data.append(entry)
-        entry = input()
+
+    while entry or not data_processor.data:
+        if not entry.strip():
+            print("Domain not entered. Please try again or enter 'b' to go back to the main menu.")
+            entry = input()
+            if entry.strip() == 'b':
+                return False  # Return False to indicate going back to the main menu
+        else:
+            data_processor.data.append(entry)
+            entry = input()
+    return True  # Return True to indicate successful data loading
 
 def save_output_as_excel(data_processor):
     try:
