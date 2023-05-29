@@ -16,8 +16,8 @@ class DataProcessor:
     def load_data_from_text(self, file_path):
         self.data = file_operations.load_data_from_text(file_path)
 
-    def load_data_from_terminal(self):
-        self.data = file_operations.load_data_from_terminal()
+    def load_data_from_terminal(self, file_path):
+        self.data = file_operations.load_data_from_terminal(file_path)
 
     def save_output_to_excel(self, file_path):
         file_operations.save_output_as_excel(file_path, self.results)

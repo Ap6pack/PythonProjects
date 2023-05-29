@@ -38,6 +38,7 @@ def load_data_from_text(file_path):
     try:
         with open(file_path, "r") as file:
             data = file.read().splitlines()
+        print(f"Data loaded from XML file: {file_path}")
         return data
     except Exception as e:
         print(f"Failed to load data from Text file. Error: {str(e)}")

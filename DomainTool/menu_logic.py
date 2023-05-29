@@ -41,8 +41,16 @@ def main_menu(dp):
                 continue
         elif option == "3":
             Tk().withdraw()
-            file_path = filedialog.askopenfilename(title="Select text file")
-            dp.load_data_from_text(file_path)
+            file_path = filedialog.askopenfilename(
+                title="Select text file",
+                filetypes=[("Text files", "*.txt"), ("All Files", "*.*")],
+            )
+            if file_path:
+                if dp.load_data_from_text(file_path):
+                    dp.file_type = "Text"
+            else:
+                    print("No file selected.")
+                    continue
         elif option == "4":
             file_operations.load_data_from_terminal(dp)
         elif option == "5":
