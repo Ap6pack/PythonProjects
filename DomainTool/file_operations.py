@@ -32,6 +32,9 @@ def load_data_from_xml(file_path):
         raise ValueError("Failed to load data from XML file. Error: " + str(e))
 
 def load_data_from_text(file_path):
+    if not file_path:
+        print("No file selected. Exiting...")
+        return False
     try:
         with open(file_path, "r") as file:
             data = file.read().splitlines()
