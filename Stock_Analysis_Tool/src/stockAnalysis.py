@@ -2,6 +2,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import talib
 from datetime import datetime
+from menu import display_menu, get_user_choice
 
 def validate_date(date_string):
     try:
@@ -43,37 +44,94 @@ def plot_rsi(data):
     plt.legend()
 
 def main():
-    symbol = input("Enter stock symbol: ")
-
-    # Validate start date
     while True:
-        start_date = input("Enter start date (YYYY-MM-DD): ")
-        if validate_date(start_date):
+        display_menu()
+        choice = get_user_choice()
+
+        if choice == '1':
+            symbol = input("Enter stock symbol: ")
+            while True:
+                start_date = input("Enter start date (YYYY-MM-DD): ")
+                if validate_date(start_date):
+                    break
+
+            while True:
+                end_date = input("Enter end date (YYYY-MM-DD): ")
+                if validate_date(end_date):
+                    break
+
+            data = fetch_stock_data(symbol, start_date, end_date)
+            data['MA20'] = data['Close'].rolling(window=20).mean()
+            data['MA50'] = data['Close'].rolling(window=50).mean()
+            data['RSI'] = talib.RSI(data['Close'])
+
+            plt.figure(figsize=(12, 12))
+            plot_closing_prices(data, symbol)
+            plot_moving_averages(data)
+            plot_rsi(data)
+            plt.tight_layout()
+            plt.show()
+
+        elif choice == '2':
+            symbol = input("Enter stock symbol: ")
+            while True:
+                start_date = input("Enter start date (YYYY-MM-DD): ")
+                if validate_date(start_date):
+                    break
+
+            while True:
+                end_date = input("Enter end date (YYYY-MM-DD): ")
+                if validate_date(end_date):
+                    break
+
+            data = fetch_stock_data(symbol, start_date, end_date)
+            plot_closing_prices(data, symbol)
+            plt.tight_layout()
+            plt.show()
+
+        elif choice == '3':
+            symbol = input("Enter stock symbol: ")
+            while True:
+                start_date = input("Enter start date (YYYY-MM-DD): ")
+                if validate_date(start_date):
+                    break
+
+            while True:
+                end_date = input("Enter end date (YYYY-MM-DD): ")
+                if validate_date(end_date):
+                    break
+
+            data = fetch_stock_data(symbol, start_date, end_date)
+            data['MA20'] = data['Close'].rolling(window=20).mean()
+            data['MA50'] = data['Close'].rolling(window=50).mean()
+            plot_moving_averages(data)
+            plt.tight_layout()
+            plt.show()
+
+        elif choice == '4':
+            symbol = input("Enter stock symbol: ")
+            while True:
+                start_date = input("Enter start date (YYYY-MM-DD): ")
+                if validate_date(start_date):
+                    break
+
+            while True:
+                end_date = input("Enter end date (YYYY-MM-DD): ")
+                if validate_date(end_date):
+                    break
+
+            data = fetch_stock_data(symbol, start_date, end_date)
+            data['RSI'] = talib.RSI(data['Close'])
+            plot_rsi(data)
+            plt.tight_layout()
+            plt.show()
+
+        elif choice == '5':
+            print("Exiting the Stock Analysis Tool. Goodbye!")
             break
 
-    # Validate end date
-    while True:
-        end_date = input("Enter end date (YYYY-MM-DD): ")
-        if validate_date(end_date):
-            break
-
-    data = fetch_stock_data(symbol, start_date, end_date)
-
-    # Calculate 20-day and 50-day moving averages
-    data['MA20'] = data['Close'].rolling(window=20).mean()
-    data['MA50'] = data['Close'].rolling(window=50).mean()
-
-    # Calculate RSI
-    data['RSI'] = talib.RSI(data['Close'])
-
-    plt.figure(figsize=(12, 12))
-
-    plot_closing_prices(data, symbol)
-    plot_moving_averages(data)
-    plot_rsi(data)
-
-    plt.tight_layout()  # Adjust layout to prevent overlapping
-    plt.show()
+        else:
+            print("Invalid choice. Please enter a number between 1 and 5.")
 
 if __name__ == "__main__":
     main()
