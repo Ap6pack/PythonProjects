@@ -2,7 +2,9 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import talib
 from datetime import datetime
+
 from menu import display_menu, get_user_choice
+from technical import calculate_bollinger_bands, calculate_macd
 
 def validate_date(date_string):
     try:
@@ -43,6 +45,30 @@ def plot_rsi(data):
     plt.ylabel('RSI Value')
     plt.legend()
 
+def plot_bollinger_bands(data):
+    if 'UpperBand' not in data.columns:
+        data = calculate_bollinger_bands(data)
+
+    plt.subplot(3, 1, 2)
+    plt.plot(data['Date'], data['Close'], label='Close Price')
+    plt.plot(data['Date'], data['UpperBand'], label='Upper Band')
+    plt.plot(data['Date'], data['MiddleBand'], label='Middle Band')
+    plt.plot(data['Date'], data['LowerBand'], label='Lower Band')
+    plt.title('Bollinger Bands')
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.legend()
+
+def plot_macd(data):
+    plt.subplot(3, 1, 3)
+    plt.plot(data['Date'], data['MACD'], label='MACD')
+    plt.plot(data['Date'], data['SignalLine'], label='Signal Line')
+    plt.bar(data['Date'], data['MACD_Histogram'], label='MACD Histogram', color='gray')
+    plt.title('Moving Average Convergence Divergence (MACD)')
+    plt.xlabel('Date')
+    plt.ylabel('MACD Value')
+    plt.legend()
+
 def main():
     while True:
         display_menu()
@@ -64,11 +90,13 @@ def main():
             data['MA20'] = data['Close'].rolling(window=20).mean()
             data['MA50'] = data['Close'].rolling(window=50).mean()
             data['RSI'] = talib.RSI(data['Close'])
+            data = calculate_bollinger_bands(data)  # Updated to use Bollinger Bands function
 
             plt.figure(figsize=(12, 12))
             plot_closing_prices(data, symbol)
             plot_moving_averages(data)
             plot_rsi(data)
+            plot_bollinger_bands(data)  # Added Bollinger Bands plotting
             plt.tight_layout()
             plt.show()
 
@@ -105,6 +133,7 @@ def main():
             data['MA20'] = data['Close'].rolling(window=20).mean()
             data['MA50'] = data['Close'].rolling(window=50).mean()
             plot_moving_averages(data)
+            plot_bollinger_bands(data)
             plt.tight_layout()
             plt.show()
 
