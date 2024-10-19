@@ -1,0 +1,5 @@
+yfinance==0.2.43
+pandas==2.2.3
+numpy==2.1.1
+schedule==1.2.2
+matplotlib==3.9.2
