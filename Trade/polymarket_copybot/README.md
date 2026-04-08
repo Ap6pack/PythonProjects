@@ -1,4 +1,4 @@
-# Polymarket Copy Bot (Transcript-Based Starter Project)
+# Polymarket Copy Bot (Starter Project)
 
 This project is a reusable starter app:
 
