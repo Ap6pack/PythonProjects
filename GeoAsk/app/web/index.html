@@ -15,7 +15,7 @@
         <p>Ask a spatial question in plain English. Get a map back.</p>
       </header>
 
-      <div id="messages" aria-live="polite"></div>
+      <div id="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
 
       <section id="layers-panel" hidden>
         <h2>Layers</h2>
@@ -32,12 +32,12 @@
         <button type="submit" id="ask-button">Ask</button>
       </form>
       <div id="samples">
-        <span class="samples-label">Try a sample (no setup needed):</span>
-        <div id="chips"></div>
+        <span class="samples-label" id="samples-label">Try a sample (no setup needed):</span>
+        <div id="chips" role="group" aria-labelledby="samples-label"></div>
       </div>
     </aside>
 
-    <div id="map"></div>
+    <div id="map" role="region" aria-label="Result map"></div>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>

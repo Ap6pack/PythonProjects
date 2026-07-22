@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .layers import LayerStore
-from .llm import LLMClient
+from .llm import MODEL, LLMClient, estimate_cost
 from .sources import DataSource
 from .tools import TOOL_SCHEMAS, ToolExecutor
 
@@ -84,12 +84,22 @@ class Clarification:
 
 
 @dataclass
+class Usage:
+    """Per-query LLM accounting, summed across the agent loop's turns."""
+    input_tokens: int = 0
+    output_tokens: int = 0
+    turns: int = 0
+    est_cost_usd: float = 0.0
+
+
+@dataclass
 class AskResult:
     geojson: dict[str, Any] | None
     explanation: str
     trace: list[TraceStep] = field(default_factory=list)
     finished: bool = False
     clarification: Clarification | None = None
+    usage: Usage | None = None
 
 
 def ask(
@@ -103,27 +113,40 @@ def ask(
     executor = ToolExecutor(store, source)
     messages: list[dict[str, Any]] = [{"role": "user", "content": question}]
     trace: list[TraceStep] = []
+    tally = {"input": 0, "output": 0, "turns": 0}
+
+    def finalize(result: AskResult) -> AskResult:
+        model = getattr(client, "model", MODEL)
+        result.usage = Usage(
+            input_tokens=tally["input"],
+            output_tokens=tally["output"],
+            turns=tally["turns"],
+            est_cost_usd=round(estimate_cost(model, tally["input"], tally["output"]), 6),
+        )
+        return result
 
     for _ in range(max_turns):
         response = client.respond(SYSTEM_PROMPT, TOOL_SCHEMAS, messages)
+        tally["turns"] += 1
+        _accumulate(tally, getattr(response, "usage", None))
         messages.append({"role": "assistant", "content": response.content})
 
         tool_uses = [b for b in response.content if getattr(b, "type", None) == "tool_use"]
         if not tool_uses:
             # Model answered in prose without producing a map.
-            return AskResult(
+            return finalize(AskResult(
                 geojson=None,
                 explanation=_text_of(response.content),
                 trace=trace,
                 finished=False,
-            )
+            ))
 
         tool_results = []
         for block in tool_uses:
             if block.name == "clarify":
                 # Stop and hand a guided follow-up back to the user instead of
                 # guessing. This is a terminal state for the turn.
-                return AskResult(
+                return finalize(AskResult(
                     geojson=None,
                     explanation=block.input.get("question", ""),
                     trace=trace,
@@ -132,7 +155,7 @@ def ask(
                         question=block.input.get("question", ""),
                         options=list(block.input.get("options", [])),
                     ),
-                )
+                ))
 
             if block.name == "finish":
                 layer_id = block.input.get("layer_id")
@@ -145,7 +168,7 @@ def ask(
                     tool_results.append(_error_result(block.id, f"no such layer: {layer_id}"))
                     continue
                 trace.append(TraceStep("finish", dict(block.input), {"layer_id": layer_id}, False))
-                return AskResult(geojson=geojson, explanation=explanation, trace=trace, finished=True)
+                return finalize(AskResult(geojson=geojson, explanation=explanation, trace=trace, finished=True))
 
             result, is_error = executor.execute(block.name, block.input)
             trace.append(TraceStep(block.name, dict(block.input), result, is_error))
@@ -161,12 +184,21 @@ def ask(
         if tool_results:
             messages.append({"role": "user", "content": tool_results})
 
-    return AskResult(
+    return finalize(AskResult(
         geojson=None,
         explanation="Stopped: the plan did not converge within the step budget.",
         trace=trace,
         finished=False,
-    )
+    ))
+
+
+def _accumulate(tally: dict[str, int], usage) -> None:
+    """Add one turn's token usage, if the client reported any (the SDK response
+    carries ``.usage``; the scripted client carries none)."""
+    if usage is None:
+        return
+    tally["input"] += getattr(usage, "input_tokens", 0) or 0
+    tally["output"] += getattr(usage, "output_tokens", 0) or 0
 
 
 def _to_text(result: dict[str, Any]) -> str:

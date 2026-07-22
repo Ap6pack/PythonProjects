@@ -99,12 +99,26 @@ body {
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .chip:disabled { opacity: .5; cursor: default; }
 
+/* Visible keyboard focus on every interactive control. */
+.chip:focus-visible, #ask-button:focus-visible, #layers input:focus-visible,
+.trace summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking::after { animation: none; }
+  * { scroll-behavior: auto; }
+}
+
 .summary { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .summary strong { color: var(--text); }
 
 .readout { margin-top: 6px; font-size: 13px; color: var(--text); }
 .hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.usage { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.refine { margin-top: 10px; }
+.refine-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
 #map { flex: 1; }
 

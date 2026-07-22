@@ -39,12 +39,20 @@ class ClarificationModel(BaseModel):
     options: list[str]
 
 
+class UsageModel(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    turns: int
+    est_cost_usd: float
+
+
 class AskResponse(BaseModel):
     finished: bool
     explanation: str
     geojson: dict[str, Any] | None
     trace: list[TraceStepModel]
     clarification: ClarificationModel | None = None
+    usage: UsageModel | None = None
 
 
 def _to_response(result) -> "AskResponse":
@@ -59,6 +67,13 @@ def _to_response(result) -> "AskResponse":
                                options=result.clarification.options)
             if result.clarification else None
         ),
+        usage=(
+            UsageModel(input_tokens=result.usage.input_tokens,
+                       output_tokens=result.usage.output_tokens,
+                       turns=result.usage.turns,
+                       est_cost_usd=result.usage.est_cost_usd)
+            if result.usage else None
+        ),
     )
 
 
@@ -66,10 +81,14 @@ def _to_response(result) -> "AskResponse":
 def ask_demo(variant: str = "gap"):
     """Run the orchestrator over in-memory sample data with a scripted planner —
     no API key or database needed. Lets the frontend be demoed end-to-end.
-    ``variant='clarify'`` shows the ask-a-follow-up flow."""
-    from ..orchestration.demo import run_clarify_demo, run_demo
+    ``variant='clarify'`` shows the ask-a-follow-up flow; ``'refine'`` shows a
+    stricter follow-up over the same question."""
+    from ..orchestration.demo import run_clarify_demo, run_demo, run_refine_demo
 
-    result = run_clarify_demo() if variant == "clarify" else run_demo()
+    result = {
+        "clarify": run_clarify_demo,
+        "refine": run_refine_demo,
+    }.get(variant, run_demo)()
     return _to_response(result)
 
 

@@ -144,6 +144,46 @@ def test_clarify_returns_a_question_with_options(source):
     assert result.clarification.options == ["Pharmacies", "Grocery stores"]
 
 
+# --- per-query cost tracking -------------------------------------------------
+
+class UsageLLM:
+    """A fake reporting token usage each turn (like the real SDK response)."""
+    model = "claude-opus-4-8"
+
+    def __init__(self, turns):
+        self._turns = turns
+        self._i = 0
+
+    def respond(self, system, tools, messages):
+        turn = self._turns[self._i]
+        self._i += 1
+        content = [_tool_use(f"u{self._i}_{j}", name, args) for j, (name, args) in enumerate(turn)]
+        return SimpleNamespace(content=content, stop_reason="tool_use",
+                               usage=SimpleNamespace(input_tokens=1000, output_tokens=200))
+
+
+def test_usage_is_accumulated_and_priced(source):
+    turns = [
+        [("load_pois", {"category": "pharmacy"})],
+        [("finish", {"layer_id": "layer_1", "explanation": "done"})],
+    ]
+    result = ask("show pharmacies", UsageLLM(turns), source)
+    u = result.usage
+    assert u.turns == 2
+    assert u.input_tokens == 2000 and u.output_tokens == 400
+    # opus-4-8: 2000/1e6*5 + 400/1e6*25 = 0.01 + 0.01
+    assert u.est_cost_usd == 0.02
+
+
+def test_usage_is_zero_when_client_reports_none(source):
+    # ScriptedLLM reports no usage; the demo/scripted path costs nothing.
+    turns = [[("load_pois", {"category": "pharmacy"})],
+             [("finish", {"layer_id": "layer_1", "explanation": "x"})]]
+    result = ask("q", ScriptedLLM(turns), source)
+    assert result.usage.input_tokens == 0
+    assert result.usage.est_cost_usd == 0.0
+
+
 # --- the design rule: the model never receives raw geometry ------------------
 
 def test_llm_never_sees_coordinates(source):

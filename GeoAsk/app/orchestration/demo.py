@@ -83,5 +83,24 @@ def run_demo() -> AskResult:
     return ask("sample question", ScriptedClient(_PLAN), _sample_source())
 
 
+# A refinement of the gap result: tighten the senior threshold to 20% — narrows
+# the 3 gap tracts to 2 (Powellhurst at 19% drops out).
+_REFINE_PLAN: list[list[tuple[str, dict[str, Any]]]] = [
+    [("load_pois", {"category": "pharmacy"})],
+    [("isochrone", {"layer_id": "layer_1", "minutes": 10, "mode": "drive"})],
+    [("load_tracts", {})],
+    [("spatial_join", {"target_layer_id": "layer_3", "join_layer_id": "layer_2",
+                       "predicate": "intersects", "keep": "non_matching"})],
+    [("filter_by_attribute", {"layer_id": "layer_4", "attribute": "pct_senior", "op": ">", "value": 20})],
+    [("finish", {"layer_id": "layer_5", "explanation":
+                 "Refined to neighbourhoods where seniors are more than 20% of the "
+                 "population — a stricter cut of the same access gap."})],
+]
+
+
 def run_clarify_demo() -> AskResult:
     return ask("underserved areas", ScriptedClient(_CLARIFY_PLAN), _sample_source())
+
+
+def run_refine_demo() -> AskResult:
+    return ask("only the ones with more than 20% seniors", ScriptedClient(_REFINE_PLAN), _sample_source())
