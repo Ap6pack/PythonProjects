@@ -1,10 +1,11 @@
 """A no-config demo of the orchestration layer.
 
 Runs the real orchestrator — layer store, executor, guardrails, transparency
-trace — over small in-memory sample data (a Portland-area pharmacy and three
-tracts) using a scripted planner instead of a live LLM. It produces a genuine
-access-gap result and trace, so the frontend can be seen working without an API
-key or database. The planning is canned; everything downstream is real.
+trace — over a small but realistic Portland-area sample (two pharmacies, seven
+census tracts) using a scripted planner instead of a live LLM. It produces a
+genuine access-gap result and trace, so the frontend can be shown working
+without an API key or database. The planning is canned; everything downstream is
+real, and the sample is sized so the answer is a handful of tracts, not one.
 """
 
 from __future__ import annotations
@@ -15,14 +16,13 @@ from .llm import ScriptedClient
 from .orchestrator import AskResult, ask
 from .sources import InMemoryDataSource
 
-LON, LAT = -122.68, 45.52
-
 
 def _point(lon, lat, **props):
     return {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lon, lat]}, "properties": props}
 
 
-def _tract(name, x0, y0, size, **props):
+def _tract(name, x0, y0, **props):
+    size = 0.02
     ring = [[x0, y0], [x0 + size, y0], [x0 + size, y0 + size], [x0, y0 + size], [x0, y0]]
     return {
         "type": "Feature",
@@ -32,13 +32,25 @@ def _tract(name, x0, y0, size, **props):
 
 
 def _sample_source() -> InMemoryDataSource:
-    pharmacies = {"type": "FeatureCollection", "features": [_point(LON, LAT, name="Central Pharmacy")]}
+    pharmacies = {
+        "type": "FeatureCollection",
+        "features": [
+            _point(-122.68, 45.52, name="Central Pharmacy"),
+            _point(-122.61, 45.52, name="Eastside Pharmacy"),
+        ],
+    }
     tracts = {
         "type": "FeatureCollection",
         "features": [
-            _tract("near-young", LON - 0.01, LAT - 0.01, 0.02, population=1500, pct_senior=8.0),
-            _tract("far-senior", LON + 0.20, LAT, 0.02, population=1200, pct_senior=27.0),
-            _tract("far-young", LON + 0.20, LAT + 0.03, 0.02, population=1800, pct_senior=9.0),
+            # Near the pharmacies (reachable) — excluded from the access gap.
+            _tract("Sellwood",    -122.69, 45.51, population=1500, pct_senior=8.0),
+            _tract("Richmond",    -122.66, 45.52, population=1800, pct_senior=22.0),
+            _tract("Montavilla",  -122.62, 45.50, population=1200, pct_senior=12.0),
+            # Far from any pharmacy — the access gap.
+            _tract("Pleasant Vly", -122.42, 45.52, population=1400, pct_senior=27.0),
+            _tract("Powellhurst",  -122.42, 45.55, population=1100, pct_senior=19.0),
+            _tract("Centennial",   -122.45, 45.49, population=1600, pct_senior=9.0),
+            _tract("Hazelwood",    -122.39, 45.53, population=1300, pct_senior=24.0),
         ],
     }
     return InMemoryDataSource({"pharmacy": pharmacies}, tracts)
@@ -54,7 +66,7 @@ _PLAN: list[list[tuple[str, dict[str, Any]]]] = [
                        "predicate": "intersects", "keep": "non_matching"})],
     [("filter_by_attribute", {"layer_id": "layer_4", "attribute": "pct_senior", "op": ">", "value": 15})],
     [("finish", {"layer_id": "layer_5", "explanation":
-                 "I found pharmacies, built 10-minute drive-time areas around them, "
+                 "I found the pharmacies, built 10-minute drive-time areas around them, "
                  "selected the neighbourhoods that fall outside every drive-time area, "
                  "and kept the ones with an above-average senior population."})],
 ]

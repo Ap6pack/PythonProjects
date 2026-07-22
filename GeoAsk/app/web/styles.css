@@ -89,11 +89,18 @@ body {
 }
 #ask-button:disabled { opacity: .5; cursor: default; }
 
-.linkish {
-  background: none; border: none; color: var(--accent); cursor: pointer;
-  font-size: 13px; padding: 6px 16px 14px; text-align: left;
+#samples { padding: 4px 16px 14px; }
+.samples-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+#chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+  border-radius: 999px; padding: 5px 11px; font-size: 12px; cursor: pointer;
 }
-.linkish:disabled { opacity: .5; cursor: default; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip:disabled { opacity: .5; cursor: default; }
+
+.summary { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.summary strong { color: var(--text); }
 
 #map { flex: 1; }
 

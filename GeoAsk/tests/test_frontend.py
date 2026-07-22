@@ -33,9 +33,9 @@ def test_demo_endpoint_returns_orchestrated_result():
     assert resp.status_code == 200
     data = resp.json()
     assert data["finished"] is True
-    # The canned access-gap plan yields exactly the far-senior tract.
-    names = [f["properties"]["tract"] for f in data["geojson"]["features"]]
-    assert names == ["far-senior"]
+    # The canned access-gap plan yields the far, above-average-senior tracts.
+    names = {f["properties"]["tract"] for f in data["geojson"]["features"]}
+    assert names == {"Pleasant Vly", "Powellhurst", "Hazelwood"}
     # Trace is the transparency panel: the full chain, ending in finish.
     tools = [s["tool"] for s in data["trace"]]
     assert tools == ["load_pois", "isochrone", "load_tracts", "spatial_join",
