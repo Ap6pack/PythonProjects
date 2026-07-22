@@ -67,6 +67,8 @@ const SAMPLES = [
 
 // --- messaging --------------------------------------------------------------
 
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function addMessage(text, kind, swatch) {
   const div = document.createElement("div");
   div.className = `msg ${kind}`;
@@ -74,6 +76,7 @@ function addMessage(text, kind, swatch) {
     const dot = document.createElement("span");
     dot.className = "swatch";
     dot.style.background = swatch;
+    dot.setAttribute("aria-hidden", "true");
     div.appendChild(dot);
   }
   div.appendChild(document.createTextNode(text));
@@ -85,6 +88,7 @@ function addMessage(text, kind, swatch) {
 function addThinking() {
   const div = addMessage("Working", "assistant");
   div.classList.add("thinking");
+  div.setAttribute("role", "status");
   return div;
 }
 
@@ -172,6 +176,52 @@ function addHint(container, text) {
   container.appendChild(div);
 }
 
+// Per-query LLM cost, so the operator can see what each question costs (the
+// plan flags cost as a risk to track). Hidden for the scripted demo (0 tokens).
+function addUsage(container, usage) {
+  if (!usage) return;
+  const tokens = (usage.input_tokens || 0) + (usage.output_tokens || 0);
+  if (tokens <= 0) return;
+  const cost = usage.est_cost_usd || 0;
+  const div = document.createElement("div");
+  div.className = "usage";
+  div.textContent = `${tokens.toLocaleString()} tokens · ~$${cost < 0.01 ? cost.toFixed(4) : cost.toFixed(2)}`;
+  container.appendChild(div);
+}
+
+// Quick refinements of the current answer — the "now only show ones with >20%
+// seniors" loop from the plan, one tap.
+function addRefine(container, endpoint) {
+  const isDemo = endpoint.includes("/demo");
+  const refinements = isDemo
+    ? [["Only ≥20% seniors", "/ask/demo?variant=refine", null]]
+    : [
+        ["Only the ones with >20% seniors", "/ask", "but only where seniors are more than 20% of the population"],
+        ["Widen to a 15-minute drive", "/ask", "but use a 15-minute drive time"],
+      ];
+  const wrap = document.createElement("div");
+  wrap.className = "refine";
+  const label = document.createElement("span");
+  label.className = "refine-label";
+  label.textContent = "Refine:";
+  wrap.appendChild(label);
+  const row = document.createElement("div");
+  row.className = "options";
+  refinements.forEach(([text, ep, phrase]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = text;
+    b.addEventListener("click", () => {
+      addMessage(text, "user");
+      submitQuestion(phrase ? `${lastQuestion} — ${phrase}` : text, ep);
+    });
+    row.appendChild(b);
+  });
+  wrap.appendChild(row);
+  container.appendChild(wrap);
+}
+
 function addTrace(container, trace) {
   const det = document.createElement("details");
   det.className = "trace";
@@ -219,7 +269,7 @@ function addResultLayer(geojson, name, color) {
       filter: ["==", ["geometry-type"], "Point"],
       paint: { "circle-color": color, "circle-radius": 6, "circle-stroke-color": "#fff", "circle-stroke-width": 1.5 } });
     const bb = bboxOf(geojson);
-    if (bb) map.fitBounds(bb, { padding: 60, maxZoom: 12, duration: 600 });
+    if (bb) map.fitBounds(bb, { padding: 60, maxZoom: 12, duration: REDUCED_MOTION ? 0 : 600 });
   });
   const layer = { id, name, color, sub, visible: true };
   state.layers.push(layer);
@@ -235,6 +285,7 @@ function renderLayerList() {
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = layer.visible;
+    cb.setAttribute("aria-label", `Show layer: ${layer.name}`);
     cb.addEventListener("change", () => {
       layer.visible = cb.checked;
       const v = cb.checked ? "visible" : "none";
@@ -243,6 +294,7 @@ function renderLayerList() {
     const sw = document.createElement("span");
     sw.className = "swatch";
     sw.style.background = layer.color;
+    sw.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.textContent = layer.name;
     li.append(cb, sw, label);
@@ -297,10 +349,13 @@ async function submitQuestion(question, endpoint) {
     const msg = addMessage(data.explanation || "(no explanation)", "assistant", hasMap ? color : null);
 
     if (hasMap) {
-      // 2) A real answer — summary, plain-language readout, trace, map layer.
+      // 2) A real answer — summary, plain-language readout, trace, map layer,
+      //    cost, and one-tap refinements.
       addSummary(msg, data.geojson);
       addReadout(msg, data.geojson);
       if (data.trace && data.trace.length) addTrace(msg, data.trace);
+      addUsage(msg, data.usage);
+      addRefine(msg, endpoint);
       const count = data.geojson.features.length;
       addResultLayer(data.geojson, `${trimName(question)} (${count})`, color);
     } else if (data.finished) {

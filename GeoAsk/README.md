@@ -147,8 +147,20 @@ The frontend is designed for a non-technical user, not a power user:
 - **Answers in plain language** — every map result is also stated in words
   ("Neighbourhoods: Pleasant Vly (27% seniors), Powellhurst (19%), Hazelwood
   (24%)"), so you don't have to read a choropleth.
+- **Refine in one tap** — after an answer, quick refinements ("only ≥20%
+  seniors", "widen to a 15-minute drive") re-ask with the added constraint and
+  drop the result in as a new toggleable layer — the plan's "now only show ones
+  with >20% seniors" loop.
 - **Friendly dead-ends** — out-of-scope questions, empty results, and an
   unconfigured backend get a helpful nudge toward what works, never a raw error.
+- **Accessible** — landmark roles (log / region / group), labelled layer
+  toggles, keyboard focus rings on every control, a status-announced busy
+  indicator, and `prefers-reduced-motion` support.
+
+Each answer also shows its **per-query LLM cost** (tokens + estimated USD) — the
+plan flags cost as a risk to track, so the orchestrator sums token usage across
+the agent loop and returns it on every `/ask` response (the scripted demo shows
+zero, since it uses no model).
 
 Because a live map needs an API key and database, there's a **no-config demo**:
 the **sample-question chips** (and `POST /ask/demo`) run the real orchestrator

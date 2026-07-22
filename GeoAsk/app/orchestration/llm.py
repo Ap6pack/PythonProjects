@@ -16,6 +16,21 @@ from typing import Any, Protocol
 
 MODEL = "claude-opus-4-8"
 
+# USD per 1M tokens (input, output). Kept here so cost tracking has one source of
+# truth; update when pricing changes. The plan calls out LLM cost as a risk to
+# track per query from Phase 2 on.
+PRICING = {
+    "claude-opus-4-8": (5.0, 25.0),
+    "claude-sonnet-5": (3.0, 15.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+}
+
+
+def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Rough USD cost for a query's token usage (excludes cache discounts)."""
+    in_rate, out_rate = PRICING.get(model, PRICING[MODEL])
+    return input_tokens / 1e6 * in_rate + output_tokens / 1e6 * out_rate
+
 
 class LLMClient(Protocol):
     def respond(
@@ -34,6 +49,7 @@ class AnthropicClient:
 
         self._client = anthropic.Anthropic()  # resolves ANTHROPIC_API_KEY / profile
         self._model = model
+        self.model = model  # public, for cost attribution
         self._max_tokens = max_tokens
 
     def respond(self, system, tools, messages):

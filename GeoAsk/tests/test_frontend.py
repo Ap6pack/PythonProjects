@@ -50,6 +50,28 @@ def test_demo_geojson_is_renderable():
     assert feat["geometry"]["coordinates"]
 
 
+def test_index_has_accessibility_landmarks():
+    body = client.get("/").text
+    assert 'role="log"' in body          # the conversation transcript
+    assert 'role="region"' in body       # the map
+    assert 'role="group"' in body        # the sample chips
+
+
+def test_demo_refine_variant_narrows_the_result():
+    data = client.post("/ask/demo?variant=refine").json()
+    assert data["finished"] is True
+    names = {f["properties"]["tract"] for f in data["geojson"]["features"]}
+    # Tighter senior threshold drops Powellhurst (19%).
+    assert names == {"Pleasant Vly", "Hazelwood"}
+
+
+def test_demo_reports_usage_shape():
+    data = client.post("/ask/demo").json()
+    # Scripted demo reports a usage object with zero tokens (no LLM cost).
+    assert data["usage"]["turns"] == 6
+    assert data["usage"]["est_cost_usd"] == 0.0
+
+
 def test_demo_clarify_variant_returns_a_clarification():
     data = client.post("/ask/demo?variant=clarify").json()
     assert data["finished"] is False
