@@ -1,27 +1,40 @@
-"""GeoAsk API entry point.
+"""GeoAsk API + frontend entry point.
 
-Right now this exposes the deterministic spatial-primitive layer (Phase 1). The
-AI orchestration layer (Phase 2) will mount here too, calling these same
-endpoints via their tool schemas — it will not gain any privileged path to the
-data. Run locally with:
+Exposes the deterministic spatial-primitive layer (Phase 1), the AI
+orchestration layer (Phase 2, ``/ask``), and serves the map + chat frontend
+(Phase 3) as static files. Run locally with:
 
-    uvicorn app.main:app --reload
+    uvicorn app.main:app --reload   # UI at http://localhost:8000/
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .routers import ask, primitives
 
+_WEB_DIR = Path(__file__).resolve().parent / "web"
+
 app = FastAPI(
     title="GeoAsk",
-    version="0.2.0",
-    summary="Natural-language-to-map engine — primitives + AI orchestration",
+    version="0.3.0",
+    summary="Natural-language-to-map engine — primitives + AI orchestration + map/chat UI",
 )
 
 app.include_router(primitives.router)
 app.include_router(ask.router)
+
+# Static assets (JS/CSS) for the frontend.
+app.mount("/static", StaticFiles(directory=_WEB_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(_WEB_DIR / "index.html")
 
 
 @app.get("/health", tags=["meta"])

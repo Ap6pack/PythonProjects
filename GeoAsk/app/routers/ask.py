@@ -41,6 +41,25 @@ class AskResponse(BaseModel):
     trace: list[TraceStepModel]
 
 
+def _to_response(result) -> "AskResponse":
+    return AskResponse(
+        finished=result.finished,
+        explanation=result.explanation,
+        geojson=result.geojson,
+        trace=[TraceStepModel(tool=s.tool, args=s.args, result=s.result, is_error=s.is_error)
+               for s in result.trace],
+    )
+
+
+@router.post("/demo", response_model=AskResponse)
+def ask_demo():
+    """Run the orchestrator over in-memory sample data with a scripted planner —
+    no API key or database needed. Lets the frontend be demoed end-to-end."""
+    from ..orchestration.demo import run_demo
+
+    return _to_response(run_demo())
+
+
 @router.post("", response_model=AskResponse)
 def ask_question(req: AskRequest):
     client = default_client()
@@ -54,10 +73,4 @@ def ask_question(req: AskRequest):
     with db.connect(url) as conn:
         result = ask(req.question, client, PostgisDataSource(conn))
 
-    return AskResponse(
-        finished=result.finished,
-        explanation=result.explanation,
-        geojson=result.geojson,
-        trace=[TraceStepModel(tool=s.tool, args=s.args, result=s.result, is_error=s.is_error)
-               for s in result.trace],
-    )
+    return _to_response(result)

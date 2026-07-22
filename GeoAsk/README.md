@@ -111,6 +111,27 @@ Exposed as `POST /ask` (`{"question": "..."}` → `{geojson, explanation, trace}
 it returns 503 rather than pretending if `ANTHROPIC_API_KEY` or `DATABASE_URL`
 is unset.
 
+## Map & chat frontend (`app/web/`)
+
+Phase 3 is the usable surface: a map + chat page served by the app itself (open
+`/`). You type a question, the answer renders as a **toggleable map layer**, the
+model's plain-English explanation appears in the chat, and a **transparency
+panel** lists what the engine did, step by step — the plan's non-negotiable
+trust feature, rendered straight from the `/ask` trace. Session state keeps each
+result as its own layer so you can ask, refine, and compare.
+
+It's a self-contained page (MapLibre GL for the map) rather than a React build —
+no toolchain, served directly by FastAPI. If the map library can't load (offline
+or restricted network) the page **degrades gracefully**: answers and the
+transparency trace still work, layers are still listed; only the map canvas is
+omitted.
+
+Because a live map needs an API key and database, there's a **no-config demo**:
+click *Try a sample question* (or `POST /ask/demo`) to run the real orchestrator
+over in-memory sample data via a scripted planner — a genuine access-gap result
+and trace with nothing to set up. It's how the frontend is tested in CI
+(`tests/test_frontend.py`).
+
 ## Data (`app/db.py`, `app/data_access.py`, `data/`, `sql/`)
 
 The PostGIS data layer is built: `sql/schema.sql` defines the indexed `pois` and
@@ -137,8 +158,8 @@ fetch of Overture/OSM POIs and Census/ACS tracts for a pilot bbox.
 
 - **Phase 0 — Foundation:** ✅ PostGIS schema + data-access layer + loader, Docker compose, verified acceptance query
 - **Phase 1 — Spatial primitives:** ✅ implemented, tested, exposed via API; isochrone backed by a routing engine
-- **Phase 2 — AI orchestration:** ✅ parse → plan → execute → assemble over the primitives, layer-handle isolation, guardrails, transparency trace, `POST /ask` (40 tests total, incl. a full scripted access-gap chain and live-PostGIS integration)
-- **Phase 3 — Map & chat frontend:** next — MapLibre + chat + the transparency panel (render `geojson` + `trace` from `/ask`)
+- **Phase 2 — AI orchestration:** ✅ parse → plan → execute → assemble over the primitives, layer-handle isolation, guardrails, transparency trace, `POST /ask`
+- **Phase 3 — Map & chat frontend:** ✅ served at `/` — map + chat + toggleable layers + transparency panel, graceful offline degradation, and a no-config `/ask/demo` (44 tests total, incl. the served page, the demo pipeline, a scripted access-gap chain, and live-PostGIS integration)
 - **Phases 4–5 — MVP & pilot:** the access-gap finder, then real-user validation
 
 The `demo_access_gap.py` trace is a preview of the transparency panel: it prints

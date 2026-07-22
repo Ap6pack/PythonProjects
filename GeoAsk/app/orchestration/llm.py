@@ -47,6 +47,33 @@ class AnthropicClient:
         )
 
 
+class ScriptedClient:
+    """A deterministic ``LLMClient`` that replays a fixed plan of tool calls.
+
+    Not an LLM — it plays a pre-written list of turns (each a list of
+    ``(tool_name, args)``). Used to demo and test the orchestration loop with no
+    API key: the loop, guardrails, layer store, and trace are exercised for real;
+    only the *planning* is canned. Because layer handles are deterministic
+    (layer_1, layer_2, …), a plan can reference the handles earlier steps produce.
+    """
+
+    def __init__(self, turns: list[list[tuple[str, dict[str, Any]]]]):
+        from types import SimpleNamespace
+
+        self._turns = turns
+        self._i = 0
+        self._ns = SimpleNamespace
+
+    def respond(self, system, tools, messages):
+        turn = self._turns[self._i]
+        self._i += 1
+        content = [
+            self._ns(type="tool_use", id=f"t{self._i}_{j}", name=name, input=args)
+            for j, (name, args) in enumerate(turn)
+        ]
+        return self._ns(content=content, stop_reason="tool_use")
+
+
 def default_client() -> LLMClient | None:
     """A real client if credentials are configured, else ``None`` so callers can
     fall back (the orchestrator requires an explicit client in tests)."""
