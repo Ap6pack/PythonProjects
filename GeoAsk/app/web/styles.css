@@ -102,6 +102,10 @@ body {
 .summary { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .summary strong { color: var(--text); }
 
+.readout { margin-top: 6px; font-size: 13px; color: var(--text); }
+.hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
 #map { flex: 1; }
 
 @media (max-width: 720px) {

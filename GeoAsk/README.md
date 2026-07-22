@@ -134,6 +134,22 @@ or restricted network) the page **degrades gracefully**: answers and the
 transparency trace still work, layers are still listed; only the map canvas is
 omitted.
 
+### Built for non-specialists
+
+The frontend is designed for a non-technical user, not a power user:
+
+- **Guided start** — a welcome message says what to ask, and sample chips run
+  with no setup.
+- **Ask, don't fail** — when a question is genuinely ambiguous (e.g. "which
+  areas are underserved?"), the engine calls a `clarify` tool and the UI shows
+  the follow-up question with **clickable options**; picking one continues the
+  conversation. (Try the *"vague — see it ask"* sample.)
+- **Answers in plain language** — every map result is also stated in words
+  ("Neighbourhoods: Pleasant Vly (27% seniors), Powellhurst (19%), Hazelwood
+  (24%)"), so you don't have to read a choropleth.
+- **Friendly dead-ends** — out-of-scope questions, empty results, and an
+  unconfigured backend get a helpful nudge toward what works, never a raw error.
+
 Because a live map needs an API key and database, there's a **no-config demo**:
 the **sample-question chips** (and `POST /ask/demo`) run the real orchestrator
 over a realistic in-memory sample (two pharmacies, seven tracts) via a scripted

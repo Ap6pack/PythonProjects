@@ -140,6 +140,25 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "clarify",
+        "description": (
+            "Ask the user one short follow-up question when the request is "
+            "genuinely ambiguous and a wrong guess would produce a misleading "
+            "map — e.g. the facility type is unclear, or a consequential choice "
+            "(walk vs drive in a context where it matters) is unstated. Provide "
+            "2-4 concrete options. Prefer sensible defaults over clarifying; only "
+            "use this when defaulting is genuinely risky."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string"},
+                "options": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["question", "options"],
+        },
+    },
+    {
         "name": "finish",
         "description": (
             "Call when the answer layer is ready. Provide the final layer_id and a "

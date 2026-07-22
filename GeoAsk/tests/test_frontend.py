@@ -48,3 +48,13 @@ def test_demo_geojson_is_renderable():
     feat = data["geojson"]["features"][0]
     assert feat["geometry"]["type"] == "Polygon"
     assert feat["geometry"]["coordinates"]
+
+
+def test_demo_clarify_variant_returns_a_clarification():
+    data = client.post("/ask/demo?variant=clarify").json()
+    assert data["finished"] is False
+    assert data["geojson"] is None
+    assert data["clarification"]["question"]
+    assert len(data["clarification"]["options"]) >= 2
+    # A normal demo call carries no clarification.
+    assert client.post("/ask/demo").json()["clarification"] is None

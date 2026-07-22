@@ -129,6 +129,21 @@ def test_unknown_layer_reference_is_an_error(source):
     assert "no such layer" in result.trace[0].result["error"]
 
 
+# --- clarify: guide the user instead of guessing -----------------------------
+
+def test_clarify_returns_a_question_with_options(source):
+    turns = [
+        [("clarify", {"question": "Which facilities do you mean?",
+                      "options": ["Pharmacies", "Grocery stores"]})],
+    ]
+    result = ask("underserved areas", ScriptedLLM(turns), source)
+    assert result.finished is False
+    assert result.geojson is None
+    assert result.clarification is not None
+    assert result.clarification.question == "Which facilities do you mean?"
+    assert result.clarification.options == ["Pharmacies", "Grocery stores"]
+
+
 # --- the design rule: the model never receives raw geometry ------------------
 
 def test_llm_never_sees_coordinates(source):

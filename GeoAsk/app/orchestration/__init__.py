@@ -5,12 +5,13 @@ LLM function calling. The model only ever calls the validated tools and only
 ever sees layer handles + summaries, never raw geometry.
 """
 
-from .orchestrator import AskResult, TraceStep, ask
+from .orchestrator import AskResult, Clarification, TraceStep, ask
 from .sources import DataSource, InMemoryDataSource, PostgisDataSource
 
 __all__ = [
     "ask",
     "AskResult",
+    "Clarification",
     "TraceStep",
     "DataSource",
     "InMemoryDataSource",
