@@ -12,15 +12,16 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from .routers import primitives
+from .routers import ask, primitives
 
 app = FastAPI(
     title="GeoAsk",
-    version="0.1.0",
-    summary="Natural-language-to-map engine — spatial primitives layer",
+    version="0.2.0",
+    summary="Natural-language-to-map engine — primitives + AI orchestration",
 )
 
 app.include_router(primitives.router)
+app.include_router(ask.router)
 
 
 @app.get("/health", tags=["meta"])
