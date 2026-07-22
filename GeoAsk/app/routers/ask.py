@@ -34,11 +34,17 @@ class TraceStepModel(BaseModel):
     is_error: bool
 
 
+class ClarificationModel(BaseModel):
+    question: str
+    options: list[str]
+
+
 class AskResponse(BaseModel):
     finished: bool
     explanation: str
     geojson: dict[str, Any] | None
     trace: list[TraceStepModel]
+    clarification: ClarificationModel | None = None
 
 
 def _to_response(result) -> "AskResponse":
@@ -48,16 +54,23 @@ def _to_response(result) -> "AskResponse":
         geojson=result.geojson,
         trace=[TraceStepModel(tool=s.tool, args=s.args, result=s.result, is_error=s.is_error)
                for s in result.trace],
+        clarification=(
+            ClarificationModel(question=result.clarification.question,
+                               options=result.clarification.options)
+            if result.clarification else None
+        ),
     )
 
 
 @router.post("/demo", response_model=AskResponse)
-def ask_demo():
+def ask_demo(variant: str = "gap"):
     """Run the orchestrator over in-memory sample data with a scripted planner —
-    no API key or database needed. Lets the frontend be demoed end-to-end."""
-    from ..orchestration.demo import run_demo
+    no API key or database needed. Lets the frontend be demoed end-to-end.
+    ``variant='clarify'`` shows the ask-a-follow-up flow."""
+    from ..orchestration.demo import run_clarify_demo, run_demo
 
-    return _to_response(run_demo())
+    result = run_clarify_demo() if variant == "clarify" else run_demo()
+    return _to_response(result)
 
 
 @router.post("", response_model=AskResponse)

@@ -56,6 +56,11 @@ Pick sensible defaults when the user is vague: 10 minutes, drive mode. For
 the explanation. Only use property names a layer's summary actually reports. If a
 tool returns an error, read it and correct your next call.
 
+Your users are non-technical. If the request is genuinely ambiguous in a way a
+default can't safely resolve — most often the facility type is unclear ("far from
+services" — which service?) — call clarify with one short question and 2-4
+concrete options rather than guessing. Prefer defaulting; clarify sparingly.
+
 If a question is clearly NOT an access-gap question (e.g. routing, geocoding,
 unrelated), briefly say it's outside the current MVP scope instead of forcing a
 chain. Otherwise, when the answer layer is ready, call finish — do not stop
@@ -71,11 +76,20 @@ class TraceStep:
 
 
 @dataclass
+class Clarification:
+    """A follow-up the engine asks when a question is genuinely ambiguous, with
+    concrete options the user can pick — so a non-expert is guided, not stuck."""
+    question: str
+    options: list[str] = field(default_factory=list)
+
+
+@dataclass
 class AskResult:
     geojson: dict[str, Any] | None
     explanation: str
     trace: list[TraceStep] = field(default_factory=list)
     finished: bool = False
+    clarification: Clarification | None = None
 
 
 def ask(
@@ -106,6 +120,20 @@ def ask(
 
         tool_results = []
         for block in tool_uses:
+            if block.name == "clarify":
+                # Stop and hand a guided follow-up back to the user instead of
+                # guessing. This is a terminal state for the turn.
+                return AskResult(
+                    geojson=None,
+                    explanation=block.input.get("question", ""),
+                    trace=trace,
+                    finished=False,
+                    clarification=Clarification(
+                        question=block.input.get("question", ""),
+                        options=list(block.input.get("options", [])),
+                    ),
+                )
+
             if block.name == "finish":
                 layer_id = block.input.get("layer_id")
                 explanation = block.input.get("explanation", "")

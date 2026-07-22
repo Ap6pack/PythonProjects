@@ -72,5 +72,16 @@ _PLAN: list[list[tuple[str, dict[str, Any]]]] = [
 ]
 
 
+# An ambiguous question the model can't safely default — it asks which facility.
+_CLARIFY_PLAN: list[list[tuple[str, dict[str, Any]]]] = [
+    [("clarify", {"question": "Which facilities do you mean?",
+                  "options": ["Pharmacies", "Grocery stores", "Schools"]})],
+]
+
+
 def run_demo() -> AskResult:
     return ask("sample question", ScriptedClient(_PLAN), _sample_source())
+
+
+def run_clarify_demo() -> AskResult:
+    return ask("underserved areas", ScriptedClient(_CLARIFY_PLAN), _sample_source())

@@ -126,6 +126,52 @@ function addSummary(container, geojson) {
   container.appendChild(div);
 }
 
+// Plain-language list of the neighbourhoods, so a non-technical user gets the
+// answer in words without having to read the map.
+function addReadout(container, geojson) {
+  const feats = (geojson.features || []).filter((f) => f.properties && f.properties.tract);
+  if (!feats.length) return;
+  const parts = feats.slice(0, 8).map((f) => {
+    const p = f.properties;
+    const s = typeof p.pct_senior === "number" ? ` (${Math.round(p.pct_senior)}% seniors)` : "";
+    return p.tract + s;
+  });
+  const more = feats.length > 8 ? `, and ${feats.length - 8} more` : "";
+  const div = document.createElement("div");
+  div.className = "readout";
+  div.textContent = "Neighbourhoods: " + parts.join(", ") + more + ".";
+  container.appendChild(div);
+}
+
+// A clarifying question's options, as clickable buttons. Picking one continues
+// the conversation instead of leaving the user stuck.
+function addClarifyOptions(container, options, resolveEndpoint) {
+  const row = document.createElement("div");
+  row.className = "options";
+  options.forEach((opt) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = opt;
+    b.addEventListener("click", () => {
+      addMessage(opt, "user");
+      // In the offline demo, any choice resolves to the sample map; against the
+      // live backend, the choice refines the original question.
+      if (resolveEndpoint.includes("/demo")) submitQuestion(opt, "/ask/demo");
+      else submitQuestion(`${lastQuestion} — ${opt}`, "/ask");
+    });
+    row.appendChild(b);
+  });
+  container.appendChild(row);
+}
+
+function addHint(container, text) {
+  const div = document.createElement("div");
+  div.className = "hint";
+  div.textContent = text;
+  container.appendChild(div);
+}
+
 function addTrace(container, trace) {
   const det = document.createElement("details");
   det.className = "trace";
@@ -211,7 +257,10 @@ function setBusy(busy) {
   els.chips.querySelectorAll("button").forEach((b) => (b.disabled = busy));
 }
 
+let lastQuestion = "";
+
 async function submitQuestion(question, endpoint) {
+  lastQuestion = question;
   setBusy(true);
   const thinking = addThinking();
   try {
@@ -224,28 +273,43 @@ async function submitQuestion(question, endpoint) {
 
     if (!resp.ok) {
       const detail = await resp.json().catch(() => ({}));
-      addMessage(
+      const msg = addMessage(
         resp.status === 503
-          ? `Not configured: ${detail.detail || "backend unavailable"}. Try the sample question below.`
-          : `Request failed (${resp.status}).`,
+          ? "This deployment isn't connected to live data yet."
+          : `Something went wrong (${resp.status}).`,
         "error"
       );
+      addHint(msg, "You can still try the sample questions below — they run with no setup.");
       return;
     }
 
     const data = await resp.json();
+
+    // 1) The engine needs a clarification — ask, with clickable options.
+    if (data.clarification) {
+      const msg = addMessage(data.clarification.question, "assistant");
+      addClarifyOptions(msg, data.clarification.options || [], endpoint);
+      return;
+    }
+
     const color = PALETTE[state.layers.length % PALETTE.length];
     const hasMap = data.geojson && (data.geojson.features || []).length > 0;
-
     const msg = addMessage(data.explanation || "(no explanation)", "assistant", hasMap ? color : null);
-    if (hasMap) addSummary(msg, data.geojson);
-    if (data.trace && data.trace.length) addTrace(msg, data.trace);
 
     if (hasMap) {
+      // 2) A real answer — summary, plain-language readout, trace, map layer.
+      addSummary(msg, data.geojson);
+      addReadout(msg, data.geojson);
+      if (data.trace && data.trace.length) addTrace(msg, data.trace);
       const count = data.geojson.features.length;
       addResultLayer(data.geojson, `${trimName(question)} (${count})`, color);
-    } else if (data.finished === false) {
-      // model answered in prose without producing a map — already shown.
+    } else if (data.finished) {
+      // 3) Finished but nothing matched.
+      addHint(msg, "No neighbourhoods matched. Try widening it — a longer travel time, or dropping the demographic filter.");
+      if (data.trace && data.trace.length) addTrace(msg, data.trace);
+    } else {
+      // 4) Out of scope — the model answered in prose. Nudge toward what works.
+      addHint(msg, "Right now I map access-gap questions — which neighbourhoods are poorly served by a facility. Try a sample below.");
     }
   } catch (err) {
     thinking.remove();
@@ -268,16 +332,33 @@ els.form.addEventListener("submit", (e) => {
   submitQuestion(q, "/ask");
 });
 
-// Render the sample-question chips. All hit /ask/demo (same sample result),
-// showing the one MVP question type is robust to phrasing.
-SAMPLES.forEach((text) => {
+// Render the sample-question chips. Most hit /ask/demo (same sample result),
+// showing the one MVP question type is robust to phrasing; one is deliberately
+// vague to show the engine asking a clarifying question.
+function addChip(text, onClick) {
   const chip = document.createElement("button");
   chip.type = "button";
   chip.className = "chip";
   chip.textContent = text;
-  chip.addEventListener("click", () => {
+  chip.addEventListener("click", onClick);
+  els.chips.appendChild(chip);
+}
+
+SAMPLES.forEach((text) =>
+  addChip(text, () => {
     addMessage(text, "user");
     submitQuestion(text, "/ask/demo");
-  });
-  els.chips.appendChild(chip);
+  })
+);
+addChip("Which areas are underserved?  (vague — see it ask)", () => {
+  addMessage("Which areas are underserved?", "user");
+  submitQuestion("Which areas are underserved?", "/ask/demo?variant=clarify");
 });
+
+// Welcome / empty state so a first-time, non-technical user knows what to do.
+addMessage(
+  "Hi! Ask which neighbourhoods are poorly served by a facility — for example, "
+    + "“where are the pharmacy deserts?” I’ll build the map and show my "
+    + "work. Not sure where to start? Tap a sample below.",
+  "assistant"
+);
