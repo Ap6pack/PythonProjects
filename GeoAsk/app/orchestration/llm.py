@@ -65,6 +65,10 @@ class ScriptedClient:
         self._ns = SimpleNamespace
 
     def respond(self, system, tools, messages):
+        # A fresh conversation (only the user turn present) replays from the top,
+        # so one instance can drive many independent questions.
+        if len(messages) == 1:
+            self._i = 0
         turn = self._turns[self._i]
         self._i += 1
         content = [
