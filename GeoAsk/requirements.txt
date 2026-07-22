@@ -5,6 +5,9 @@ pydantic>=2.7
 shapely>=2.0
 pyproj>=3.6
 
+# AI orchestration (Phase 2) — LLM function calling
+anthropic>=0.117
+
 # Testing
 pytest>=8.0
 httpx>=0.27

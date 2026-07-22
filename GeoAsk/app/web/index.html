@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoAsk — ask a map</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header id="brand">
+        <h1>GeoAsk</h1>
+        <p>Ask a spatial question in plain English. Get a map back.</p>
+      </header>
+
+      <div id="messages" aria-live="polite"></div>
+
+      <section id="layers-panel" hidden>
+        <h2>Layers</h2>
+        <ul id="layers"></ul>
+      </section>
+
+      <form id="ask-form" autocomplete="off">
+        <input
+          id="question"
+          type="text"
+          placeholder="e.g. neighbourhoods far from a pharmacy with many seniors"
+          aria-label="Your question"
+        />
+        <button type="submit" id="ask-button">Ask</button>
+      </form>
+      <button type="button" id="demo-button" class="linkish">
+        ▶ Try a sample question (no setup needed)
+      </button>
+    </aside>
+
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
