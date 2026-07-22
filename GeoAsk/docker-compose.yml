@@ -1,0 +1,31 @@
+# Phase 0 dev environment: the API and a PostGIS database.
+# `docker compose up` gives you a running spatial DB and the primitives API.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: geoask
+      POSTGRES_PASSWORD: geoask
+      POSTGRES_DB: geoask
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geoask"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://geoask:geoask@db:5432/geoask
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,12 @@
+[project]
+name = "geoask"
+version = "0.1.0"
+description = "Natural-language-to-map engine — spatial primitives layer"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "postgis: integration tests that need a live PostGIS (skipped without DATABASE_URL)",
+]
