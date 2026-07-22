@@ -185,8 +185,8 @@ fetch of Overture/OSM POIs and Census/ACS tracts for a pilot bbox.
 - **Phase 1 — Spatial primitives:** ✅ implemented, tested, exposed via API; isochrone backed by a routing engine
 - **Phase 2 — AI orchestration:** ✅ parse → plan → execute → assemble over the primitives, layer-handle isolation, guardrails, transparency trace, `POST /ask`
 - **Phase 3 — Map & chat frontend:** ✅ served at `/` — map + chat + toggleable layers + transparency panel, graceful offline degradation, and a no-config `/ask/demo`
-- **Phase 4 — MVP (Access-Gap Finder):** ✅ scoped to access-gap done well — realistic sample, sample-question chips, engine-grounded result summary, a 15-phrasing corpus + live-eval harness, and deploy-as-one-URL via Docker (49 tests + 1 skipped live eval)
-- **Phase 5 — Pilot & validation:** next — run with real gov/planning users, accuracy audit vs. manual GIS (the `evals/` corpus is the seed), measure query success rate and time-to-answer
+- **Phase 4 — MVP (Access-Gap Finder):** ✅ scoped to access-gap done well — realistic sample, sample-question chips, engine-grounded result summary, a 15-phrasing corpus + live-eval harness, and deploy-as-one-URL via Docker
+- **Phase 5 — Pilot & validation:** ✅ *harness* — an accuracy audit (`evals/audit.py`) that compares the AI's maps to a deterministic manual-GIS baseline (`evals/ground_truth.py`), measures time-to-answer, and gates on the ≥80% bar, with the methodology documented (`evals/README.md`). Running the pilot itself needs a live model, regional data, and real users (54 tests + 1 skipped live eval)
 
 The `demo_access_gap.py` trace is a preview of the transparency panel: it prints
 exactly what the engine did at each step, which the plan calls non-negotiable
