@@ -52,10 +52,18 @@ const els = {
   form: document.getElementById("ask-form"),
   question: document.getElementById("question"),
   askButton: document.getElementById("ask-button"),
-  demoButton: document.getElementById("demo-button"),
+  chips: document.getElementById("chips"),
   layersPanel: document.getElementById("layers-panel"),
   layers: document.getElementById("layers"),
 };
+
+// The one MVP question, phrased several ways — all resolve to the same sample
+// access-gap result via /ask/demo, demonstrating phrasing robustness offline.
+const SAMPLES = [
+  "Neighbourhoods >10 min from a pharmacy with above-average seniors",
+  "Where are the pharmacy deserts?",
+  "Which older communities can't easily reach a pharmacy?",
+];
 
 // --- messaging --------------------------------------------------------------
 
@@ -101,6 +109,21 @@ function describeStep(step) {
     case "finish": return `Final answer ready`;
     default: return step.tool;
   }
+}
+
+function addSummary(container, geojson) {
+  const feats = geojson.features || [];
+  let pop = 0, hasPop = false;
+  feats.forEach((f) => {
+    const p = f.properties && f.properties.population;
+    if (typeof p === "number") { pop += p; hasPop = true; }
+  });
+  const div = document.createElement("div");
+  div.className = "summary";
+  const n = feats.length;
+  div.innerHTML = `<strong>${n}</strong> neighbourhood${n === 1 ? "" : "s"} in the access gap`
+    + (hasPop ? ` · <strong>~${pop.toLocaleString()}</strong> residents` : "");
+  container.appendChild(div);
 }
 
 function addTrace(container, trace) {
@@ -183,9 +206,13 @@ function renderLayerList() {
 
 // --- request flow -----------------------------------------------------------
 
+function setBusy(busy) {
+  els.askButton.disabled = busy;
+  els.chips.querySelectorAll("button").forEach((b) => (b.disabled = busy));
+}
+
 async function submitQuestion(question, endpoint) {
-  els.askButton.disabled = true;
-  els.demoButton.disabled = true;
+  setBusy(true);
   const thinking = addThinking();
   try {
     const resp = await fetch(endpoint, {
@@ -211,6 +238,7 @@ async function submitQuestion(question, endpoint) {
     const hasMap = data.geojson && (data.geojson.features || []).length > 0;
 
     const msg = addMessage(data.explanation || "(no explanation)", "assistant", hasMap ? color : null);
+    if (hasMap) addSummary(msg, data.geojson);
     if (data.trace && data.trace.length) addTrace(msg, data.trace);
 
     if (hasMap) {
@@ -223,8 +251,7 @@ async function submitQuestion(question, endpoint) {
     thinking.remove();
     addMessage(`Network error: ${err.message}`, "error");
   } finally {
-    els.askButton.disabled = false;
-    els.demoButton.disabled = false;
+    setBusy(false);
   }
 }
 
@@ -241,8 +268,16 @@ els.form.addEventListener("submit", (e) => {
   submitQuestion(q, "/ask");
 });
 
-const SAMPLE_Q = "Neighbourhoods >10 min from a pharmacy with above-average seniors";
-els.demoButton.addEventListener("click", () => {
-  addMessage(SAMPLE_Q, "user");
-  submitQuestion(SAMPLE_Q, "/ask/demo");
+// Render the sample-question chips. All hit /ask/demo (same sample result),
+// showing the one MVP question type is robust to phrasing.
+SAMPLES.forEach((text) => {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "chip";
+  chip.textContent = text;
+  chip.addEventListener("click", () => {
+    addMessage(text, "user");
+    submitQuestion(text, "/ask/demo");
+  });
+  els.chips.appendChild(chip);
 });

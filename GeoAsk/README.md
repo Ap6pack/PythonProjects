@@ -61,15 +61,23 @@ pytest
 # the end-to-end access-gap demo (the MVP question type), no DB needed
 python demo_access_gap.py
 
-# the API
-uvicorn app.main:app --reload   # docs at http://localhost:8000/docs
+# the app — map + chat UI at /, API docs at /docs
+uvicorn app.main:app --reload   # then open http://localhost:8000/
 ```
 
-Or the full Phase-0 environment (API + PostGIS):
+Open `/` and click a **sample question** to see the whole thing work with no API
+key or database (it runs the real engine over in-memory sample data).
+
+Or the full environment (app + PostGIS) as one command:
 
 ```bash
-docker compose up
+docker compose up            # UI on http://localhost:8000/
 ```
+
+To run against real data with live natural-language questions, set
+`ANTHROPIC_API_KEY` and `DATABASE_URL` (see `.env.example`) and load a pilot
+region (`data/README.md`). Deploying the container anywhere that serves port
+8000 gives the "one shareable URL" the MVP calls for.
 
 ## The API (`app/`)
 
@@ -127,10 +135,27 @@ transparency trace still work, layers are still listed; only the map canvas is
 omitted.
 
 Because a live map needs an API key and database, there's a **no-config demo**:
-click *Try a sample question* (or `POST /ask/demo`) to run the real orchestrator
-over in-memory sample data via a scripted planner — a genuine access-gap result
-and trace with nothing to set up. It's how the frontend is tested in CI
+the **sample-question chips** (and `POST /ask/demo`) run the real orchestrator
+over a realistic in-memory sample (two pharmacies, seven tracts) via a scripted
+planner — a genuine access-gap result and trace with nothing to set up. Each
+mapped answer carries an engine-grounded summary (*"3 neighbourhoods in the
+access gap · ~3,800 residents"*). It's how the frontend is tested in CI
 (`tests/test_frontend.py`).
+
+## MVP scope & phrasing coverage (`evals/`)
+
+The MVP does **one** question type — access-gap analysis — done well. Users
+phrase it many ways ("pharmacy deserts", "areas underserved by pharmacies",
+"where do seniors live far from a pharmacy"); the orchestrator's system prompt
+maps them all to one canonical recipe, and out-of-scope questions get a short
+"outside the current scope" answer rather than a forced chain.
+
+`evals/phrasings.py` is a corpus of 15 real phrasings plus a scorer that checks
+the access-gap invariant that matters — the reachable neighbourhoods must never
+appear in the answer. `python -m evals.run` scores the whole corpus against the
+live model (needs `ANTHROPIC_API_KEY`); the scorer is unit-tested in CI and the
+live run is a skipped test until a key is present (`tests/test_phrasings.py`).
+This is the Phase 4 phrasing target and the seed for the Phase 5 accuracy audit.
 
 ## Data (`app/db.py`, `app/data_access.py`, `data/`, `sql/`)
 
@@ -159,8 +184,9 @@ fetch of Overture/OSM POIs and Census/ACS tracts for a pilot bbox.
 - **Phase 0 — Foundation:** ✅ PostGIS schema + data-access layer + loader, Docker compose, verified acceptance query
 - **Phase 1 — Spatial primitives:** ✅ implemented, tested, exposed via API; isochrone backed by a routing engine
 - **Phase 2 — AI orchestration:** ✅ parse → plan → execute → assemble over the primitives, layer-handle isolation, guardrails, transparency trace, `POST /ask`
-- **Phase 3 — Map & chat frontend:** ✅ served at `/` — map + chat + toggleable layers + transparency panel, graceful offline degradation, and a no-config `/ask/demo` (44 tests total, incl. the served page, the demo pipeline, a scripted access-gap chain, and live-PostGIS integration)
-- **Phases 4–5 — MVP & pilot:** the access-gap finder, then real-user validation
+- **Phase 3 — Map & chat frontend:** ✅ served at `/` — map + chat + toggleable layers + transparency panel, graceful offline degradation, and a no-config `/ask/demo`
+- **Phase 4 — MVP (Access-Gap Finder):** ✅ scoped to access-gap done well — realistic sample, sample-question chips, engine-grounded result summary, a 15-phrasing corpus + live-eval harness, and deploy-as-one-URL via Docker (49 tests + 1 skipped live eval)
+- **Phase 5 — Pilot & validation:** next — run with real gov/planning users, accuracy audit vs. manual GIS (the `evals/` corpus is the seed), measure query success rate and time-to-answer
 
 The `demo_access_gap.py` trace is a preview of the transparency panel: it prints
 exactly what the engine did at each step, which the plan calls non-negotiable
