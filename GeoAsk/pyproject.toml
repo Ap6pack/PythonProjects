@@ -7,3 +7,6 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "postgis: integration tests that need a live PostGIS (skipped without DATABASE_URL)",
+]

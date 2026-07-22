@@ -25,7 +25,7 @@ Each is a pure function over GeoJSON, so it is testable with no database.
 | Primitive | What it does |
 |---|---|
 | `buffer` | Grow features by a distance in metres |
-| `isochrone` | Reachable area within a travel-time budget (**approximate** — see below) |
+| `isochrone` | Road-network reachable area within a travel-time budget (routing engine; see below) |
 | `filter_by_attribute` | Keep features whose property passes a comparison |
 | `spatial_join` | Relate two layers by `intersects` / `within` / `contains`; `keep="non_matching"` gives you the access gap |
 | `nearest` | For each source feature, the closest destination and its distance |
@@ -37,12 +37,17 @@ in raw degrees.
 
 ### On `isochrone`
 
-The isochrone is currently a documented **approximation**: a straight-line
-buffer at a mode-typical speed with a detour discount. A true isochrone follows
-the road network and needs a routing engine (OSRM / Valhalla / pgRouting). The
-function already has the final signature (`minutes`, `mode`), so swapping in the
-routing engine is an internal change no caller sees. Results are flagged
-`_isochrone_approx: true` so the transparency panel can label them honestly.
+The isochrone uses a **road-network routing engine** (Valhalla by default; see
+`app/spatial/routing.py`). Point `VALHALLA_URL` at a Valhalla server and results
+are true network isochrones, flagged `_isochrone_approx: false`. The routing
+backend sits behind a small `RoutingClient` protocol, so it is swappable and
+mockable in tests without a live server.
+
+When no engine is configured, the primitive falls back to a straight-line buffer
+at a mode-typical speed and flags the result `_isochrone_approx: true` — an
+explicit, labelled fallback that keeps the no-infrastructure demo and tests
+running, never a silent stand-in. The transparency panel uses the flag to tell
+the user which backend produced the map.
 
 ## Run it
 
@@ -74,17 +79,32 @@ schemas will mirror these request models. Malformed calls are rejected with a
 422 before any geometry runs, which is the first of the plan's validation
 guardrails.
 
-## Data (`data/`)
+## Data (`app/db.py`, `app/data_access.py`, `data/`, `sql/`)
 
-`data/README.md` describes the Phase 0 pipeline: load one pilot metro's POIs and
-Census tracts into PostGIS, index them, and verify with a known spatial query.
-The primitives are written to consume GeoJSON from that database unchanged — the
-data source becomes PostGIS without the primitive logic changing.
+The PostGIS data layer is built: `sql/schema.sql` defines the indexed `pois` and
+`tracts` tables, `app/db.py` manages the connection and applies the schema, and
+`app/data_access.py` turns rows into GeoJSON FeatureCollections (via
+`ST_AsGeoJSON`) that feed the *same* tested primitives — the primitive logic is
+identical whether the GeoJSON comes from memory or the database.
+
+```bash
+# bring up PostGIS, load a pilot region, and it's queryable
+docker compose up -d db
+DATABASE_URL=postgresql://geoask:geoask@localhost:5432/geoask \
+  python -m data.load --pois pois.geojson --tracts tracts.geojson
+```
+
+`app/data_access.py` also implements the Phase 0 acceptance query (tracts within
+2 km of a POI category) as `tracts_within_of_category`. The whole path —
+schema → load → query → GeoJSON → primitive — is covered by integration tests
+(`tests/test_postgis_integration.py`), which run against a live PostGIS and skip
+cleanly when `DATABASE_URL` is unset. `data/README.md` documents the upstream
+fetch of Overture/OSM POIs and Census/ACS tracts for a pilot bbox.
 
 ## Where this sits in the plan
 
-- **Phase 0 — Foundation:** ✅ scaffolded (Docker + PostGIS compose, data pipeline doc)
-- **Phase 1 — Spatial primitives:** ✅ implemented, tested (26 tests), exposed via API
+- **Phase 0 — Foundation:** ✅ PostGIS schema + data-access layer + loader, Docker compose, verified acceptance query
+- **Phase 1 — Spatial primitives:** ✅ implemented, tested (35 tests incl. live-PostGIS integration), exposed via API; isochrone backed by a routing engine
 - **Phase 2 — AI orchestration:** next — tool schemas over these endpoints, parse → plan → execute → assemble
 - **Phase 3 — Map & chat frontend:** MapLibre + chat + the transparency panel
 - **Phases 4–5 — MVP & pilot:** the access-gap finder, then real-user validation
